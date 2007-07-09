@@ -1,0 +1,798 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module glpk</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>glpk</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/Users/thomas/Documents/Work/python/pyglpk/glpk.so">/Users/thomas/Documents/Work/python/pyglpk/glpk.so</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="glpk.html#Bar">Bar</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#BarCollection">BarCollection</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#BarCollectionIter">BarCollectionIter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#KKT">KKT</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#LPX">LPX</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#Objective">Objective</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#ObjectiveIter">ObjectiveIter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#Params">Params</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Bar">class <strong>Bar</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Bar">Bar</a>&nbsp;objects&nbsp;are&nbsp;used&nbsp;to&nbsp;refer&nbsp;to&nbsp;a&nbsp;particular&nbsp;row&nbsp;or&nbsp;column&nbsp;of<br>
+a&nbsp;linear&nbsp;program.&nbsp;&nbsp;Rows&nbsp;and&nbsp;columns&nbsp;may&nbsp;be&nbsp;retrieved&nbsp;by<br>
+indexing&nbsp;into&nbsp;the&nbsp;rows&nbsp;and&nbsp;cols&nbsp;sequences&nbsp;of&nbsp;<a href="#LPX">LPX</a>&nbsp;instances.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Bar-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#Bar-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="Bar-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#Bar-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>bounds</strong></dt>
+<dd><tt>The&nbsp;lower&nbsp;and&nbsp;upper&nbsp;bounds,&nbsp;where&nbsp;None&nbsp;signifies&nbsp;unboundedness.</tt></dd>
+</dl>
+<dl><dt><strong>dual</strong></dt>
+<dd><tt>The&nbsp;dual&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;last&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>dual_i</strong></dt>
+<dd><tt>The&nbsp;dual&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;interior-point&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>dual_s</strong></dt>
+<dd><tt>The&nbsp;dual&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;simplex&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>index</strong></dt>
+<dd><tt>The&nbsp;index&nbsp;of&nbsp;the&nbsp;row&nbsp;or&nbsp;column&nbsp;this&nbsp;object&nbsp;refers&nbsp;to.</tt></dd>
+</dl>
+<dl><dt><strong>iscol</strong></dt>
+<dd><tt>Whether&nbsp;this&nbsp;is&nbsp;a&nbsp;column.</tt></dd>
+</dl>
+<dl><dt><strong>isrow</strong></dt>
+<dd><tt>Whether&nbsp;this&nbsp;is&nbsp;a&nbsp;row.</tt></dd>
+</dl>
+<dl><dt><strong>kind</strong></dt>
+<dd><tt>Either&nbsp;the&nbsp;type&nbsp;'float'&nbsp;if&nbsp;this&nbsp;is&nbsp;a&nbsp;continuous&nbsp;variable,&nbsp;or&nbsp;'int'<br>
+if&nbsp;this&nbsp;is&nbsp;an&nbsp;integer&nbsp;variable.</tt></dd>
+</dl>
+<dl><dt><strong>matrix</strong></dt>
+<dd><tt>Non-zero&nbsp;constraint&nbsp;coefficients&nbsp;in&nbsp;this&nbsp;row/column&nbsp;vector<br>
+as&nbsp;a&nbsp;list&nbsp;of&nbsp;two-element&nbsp;(index,&nbsp;value)&nbsp;tuples.</tt></dd>
+</dl>
+<dl><dt><strong>name</strong></dt>
+<dd><tt>Row/column&nbsp;symbolic&nbsp;name,&nbsp;or&nbsp;None&nbsp;if&nbsp;unset.</tt></dd>
+</dl>
+<dl><dt><strong>nnz</strong></dt>
+<dd><tt>Number&nbsp;of&nbsp;non-zero&nbsp;constraint&nbsp;elements&nbsp;in&nbsp;this&nbsp;row/column.</tt></dd>
+</dl>
+<dl><dt><strong>primal</strong></dt>
+<dd><tt>The&nbsp;primal&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;last&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>primal_i</strong></dt>
+<dd><tt>The&nbsp;primal&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;interior-point&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>primal_s</strong></dt>
+<dd><tt>The&nbsp;primal&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;simplex&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>status</strong></dt>
+<dd><tt>Row/column&nbsp;basis&nbsp;status.&nbsp;&nbsp;This&nbsp;is&nbsp;a&nbsp;two&nbsp;character&nbsp;string&nbsp;with<br>
+the&nbsp;following&nbsp;possible&nbsp;values:<br>
+&nbsp;<br>
+bs&nbsp;--&nbsp;This&nbsp;row/column&nbsp;is&nbsp;basic.<br>
+nl&nbsp;--&nbsp;This&nbsp;row/column&nbsp;is&nbsp;non-basic.<br>
+nu&nbsp;--&nbsp;This&nbsp;row/column&nbsp;is&nbsp;non-basic&nbsp;and&nbsp;set&nbsp;to&nbsp;the&nbsp;upper&nbsp;bound.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;On&nbsp;assignment,&nbsp;if&nbsp;this&nbsp;row/column&nbsp;is&nbsp;not&nbsp;double&nbsp;bounded,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this&nbsp;is&nbsp;equivalent&nbsp;to&nbsp;'nl'.<br>
+nf&nbsp;--&nbsp;This&nbsp;row/column&nbsp;is&nbsp;non-basic&nbsp;and&nbsp;free.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;On&nbsp;assignment&nbsp;this&nbsp;is&nbsp;equivalent&nbsp;to&nbsp;'nl'.<br>
+ns&nbsp;--&nbsp;This&nbsp;row/column&nbsp;is&nbsp;non-basic&nbsp;and&nbsp;fixed.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;On&nbsp;assignment&nbsp;this&nbsp;is&nbsp;equivalent&nbsp;to&nbsp;'nl'.</tt></dd>
+</dl>
+<dl><dt><strong>valid</strong></dt>
+<dd><tt>Whether&nbsp;this&nbsp;row&nbsp;or&nbsp;column&nbsp;has&nbsp;a&nbsp;valid&nbsp;index&nbsp;in&nbsp;its&nbsp;LP.</tt></dd>
+</dl>
+<dl><dt><strong>value</strong></dt>
+<dd><tt>The&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;last&nbsp;solver.</tt></dd>
+</dl>
+<dl><dt><strong>value_m</strong></dt>
+<dd><tt>The&nbsp;value&nbsp;of&nbsp;this&nbsp;variable&nbsp;by&nbsp;the&nbsp;MIP&nbsp;solver.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="BarCollection">class <strong>BarCollection</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Bar">Bar</a>&nbsp;collection&nbsp;objects.&nbsp;&nbsp;An&nbsp;instance&nbsp;is&nbsp;used&nbsp;to&nbsp;index&nbsp;into&nbsp;either<br>
+the&nbsp;rows&nbsp;and&nbsp;columns&nbsp;of&nbsp;a&nbsp;linear&nbsp;program.&nbsp;&nbsp;They&nbsp;exist&nbsp;as&nbsp;the&nbsp;'rows'<br>
+and&nbsp;'cols'&nbsp;attributes&nbsp;of&nbsp;<a href="#LPX">LPX</a>&nbsp;instances.<br>
+&nbsp;<br>
+One&nbsp;accesses&nbsp;particular&nbsp;rows&nbsp;or&nbsp;columns&nbsp;by&nbsp;indexing&nbsp;the&nbsp;appropriate<br>
+bar&nbsp;collection&nbsp;<a href="__builtin__.html#object">object</a>,&nbsp;or&nbsp;iterating&nbsp;over&nbsp;it.&nbsp;&nbsp;Valid&nbsp;indices&nbsp;include<br>
+particular&nbsp;row&nbsp;and&nbsp;column&nbsp;names&nbsp;(a&nbsp;user&nbsp;defined&nbsp;string)&nbsp;or&nbsp;numbers<br>
+(counting&nbsp;from&nbsp;0),&nbsp;a&nbsp;slice&nbsp;specifying&nbsp;a&nbsp;range&nbsp;of&nbsp;numeric&nbsp;elements,<br>
+or&nbsp;a&nbsp;series&nbsp;of&nbsp;individual&nbsp;indices.&nbsp;&nbsp;For&nbsp;example,&nbsp;for&nbsp;an&nbsp;<a href="#LPX">LPX</a>&nbsp;instance<br>
+lp,&nbsp;we&nbsp;may&nbsp;have:<br>
+&nbsp;<br>
+lp.rows[0]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;first&nbsp;row<br>
+lp.rows[-1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;last&nbsp;row<br>
+lp.cols[:3]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;first&nbsp;three&nbsp;columns<br>
+lp.cols[1,'name',5]&nbsp;--&gt;&nbsp;column&nbsp;1,&nbsp;a&nbsp;column&nbsp;named&nbsp;'name',&nbsp;and&nbsp;column&nbsp;5<br>
+&nbsp;<br>
+One&nbsp;may&nbsp;also&nbsp;query&nbsp;the&nbsp;length&nbsp;of&nbsp;this&nbsp;sequence&nbsp;to&nbsp;get&nbsp;the&nbsp;number&nbsp;of<br>
+rows&nbsp;or&nbsp;columns,&nbsp;and&nbsp;del&nbsp;to&nbsp;get&nbsp;rid&nbsp;of&nbsp;rows&nbsp;or&nbsp;columns,&nbsp;e.g.:<br>
+&nbsp;<br>
+len(lp.cols)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;number&nbsp;of&nbsp;columns&nbsp;in&nbsp;the&nbsp;problem<br>
+del&nbsp;lp.rows['arow']&nbsp;--&gt;&nbsp;deletes&nbsp;a&nbsp;row&nbsp;named&nbsp;'arow'<br>
+del&nbsp;lp.rows[-2:]&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;deletes&nbsp;the&nbsp;last&nbsp;two&nbsp;rows<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="BarCollection-__contains__"><strong>__contains__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__contains__">__contains__</a>(y)&nbsp;&lt;==&gt;&nbsp;y&nbsp;in&nbsp;x</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-__delitem__"><strong>__delitem__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__delitem__">__delitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;del&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-__len__"><strong>__len__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__len__">__len__</a>()&nbsp;&lt;==&gt;&nbsp;len(x)</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-__setitem__"><strong>__setitem__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollection-__setitem__">__setitem__</a>(i,&nbsp;y)&nbsp;&lt;==&gt;&nbsp;x[i]=y</tt></dd></dl>
+
+<dl><dt><a name="BarCollection-add"><strong>add</strong></a>(...)</dt><dd><tt><a href="#BarCollection-add">add</a>(n)<br>
+&nbsp;<br>
+Add&nbsp;n&nbsp;more&nbsp;rows&nbsp;(constraints)&nbsp;or&nbsp;columns&nbsp;(struct&nbsp;variables).<br>
+Returns&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;first&nbsp;added&nbsp;entry.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="BarCollectionIter">class <strong>BarCollectionIter</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Bar">Bar</a>&nbsp;collection&nbsp;iterator&nbsp;objects.&nbsp;&nbsp;Created&nbsp;for&nbsp;iterating&nbsp;over&nbsp;the<br>
+rows&nbsp;and&nbsp;columns&nbsp;contained&nbsp;with&nbsp;a&nbsp;bar&nbsp;collection.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="BarCollectionIter-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollectionIter-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="BarCollectionIter-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollectionIter-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="BarCollectionIter-__len__"><strong>__len__</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollectionIter-__len__">__len__</a>()&nbsp;&lt;==&gt;&nbsp;len(x)</tt></dd></dl>
+
+<dl><dt><a name="BarCollectionIter-next"><strong>next</strong></a>(...)</dt><dd><tt>x.<a href="#BarCollectionIter-next">next</a>()&nbsp;-&gt;&nbsp;the&nbsp;next&nbsp;value,&nbsp;or&nbsp;raise&nbsp;StopIteration</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="KKT">class <strong>KKT</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Karush-Kuhn-Tucker&nbsp;conditions.&nbsp;&nbsp;This&nbsp;is&nbsp;returned&nbsp;from&nbsp;a&nbsp;check&nbsp;on<br>
+quality&nbsp;of&nbsp;solutions.&nbsp;&nbsp;Four&nbsp;types&nbsp;of&nbsp;conditions&nbsp;are&nbsp;stored&nbsp;here:<br>
+-&nbsp;<a href="#KKT">KKT</a>.PE&nbsp;conditions&nbsp;are&nbsp;attributes&nbsp;prefixed&nbsp;by&nbsp;'pe'&nbsp;measuring<br>
+&nbsp;&nbsp;error&nbsp;in&nbsp;the&nbsp;primal&nbsp;solution.<br>
+-&nbsp;<a href="#KKT">KKT</a>.PB&nbsp;conditions&nbsp;are&nbsp;attributes&nbsp;prefixed&nbsp;by&nbsp;'pb'&nbsp;measuring<br>
+&nbsp;&nbsp;error&nbsp;in&nbsp;satisfying&nbsp;primal&nbsp;bound&nbsp;constraints,&nbsp;i.e.,&nbsp;feasibility.<br>
+-&nbsp;<a href="#KKT">KKT</a>.DE&nbsp;and&nbsp;<a href="#KKT">KKT</a>.DB&nbsp;are&nbsp;analogous,&nbsp;but&nbsp;for&nbsp;the&nbsp;dual.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Data descriptors defined here:<br>
+<dl><dt><strong>db_ae_ind</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;variable&nbsp;with&nbsp;the&nbsp;largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>db_ae_max</strong></dt>
+<dd><tt>Largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>db_quality</strong></dt>
+<dd><tt>Character&nbsp;representing&nbsp;the&nbsp;quality&nbsp;of&nbsp;primal&nbsp;feasibility.<br>
+'H',&nbsp;high,&nbsp;'M',&nbsp;medium,&nbsp;'L',&nbsp;low,&nbsp;or&nbsp;'?'&nbsp;wrong&nbsp;or&nbsp;infeasible.</tt></dd>
+</dl>
+<dl><dt><strong>db_re_ind</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;variable&nbsp;with&nbsp;the&nbsp;largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>db_re_max</strong></dt>
+<dd><tt>Largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>de_ae_max</strong></dt>
+<dd><tt>Largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>de_ae_row</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;column&nbsp;with&nbsp;the&nbsp;largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>de_quality</strong></dt>
+<dd><tt>Character&nbsp;representing&nbsp;the&nbsp;quality&nbsp;of&nbsp;the&nbsp;primal&nbsp;solution.<br>
+'H',&nbsp;high,&nbsp;'M',&nbsp;medium,&nbsp;'L',&nbsp;low,&nbsp;or&nbsp;'?'&nbsp;wrong&nbsp;or&nbsp;infeasible.</tt></dd>
+</dl>
+<dl><dt><strong>de_re_max</strong></dt>
+<dd><tt>Largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>de_re_row</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;column&nbsp;with&nbsp;the&nbsp;largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pb_ae_ind</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;variable&nbsp;with&nbsp;the&nbsp;largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pb_ae_max</strong></dt>
+<dd><tt>Largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pb_quality</strong></dt>
+<dd><tt>Character&nbsp;representing&nbsp;the&nbsp;quality&nbsp;of&nbsp;primal&nbsp;feasibility.<br>
+'H',&nbsp;high,&nbsp;'M',&nbsp;medium,&nbsp;'L',&nbsp;low,&nbsp;or&nbsp;'?'&nbsp;wrong&nbsp;or&nbsp;infeasible.</tt></dd>
+</dl>
+<dl><dt><strong>pb_re_ind</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;variable&nbsp;with&nbsp;the&nbsp;largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pb_re_max</strong></dt>
+<dd><tt>Largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pe_ae_max</strong></dt>
+<dd><tt>Largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pe_ae_row</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;row&nbsp;with&nbsp;the&nbsp;largest&nbsp;absolute&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pe_quality</strong></dt>
+<dd><tt>Character&nbsp;representing&nbsp;the&nbsp;quality&nbsp;of&nbsp;the&nbsp;primal&nbsp;solution.<br>
+'H',&nbsp;high,&nbsp;'M',&nbsp;medium,&nbsp;'L',&nbsp;low,&nbsp;or&nbsp;'?'&nbsp;wrong&nbsp;or&nbsp;infeasible.</tt></dd>
+</dl>
+<dl><dt><strong>pe_re_max</strong></dt>
+<dd><tt>Largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+<dl><dt><strong>pe_re_row</strong></dt>
+<dd><tt>Index&nbsp;of&nbsp;the&nbsp;row&nbsp;with&nbsp;the&nbsp;largest&nbsp;relative&nbsp;error.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="LPX">class <strong>LPX</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#LPX">LPX</a>()&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;Empty&nbsp;linear&nbsp;program.<br>
+<a href="#LPX">LPX</a>(gmp=filename)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;Linear&nbsp;program&nbsp;with&nbsp;data&nbsp;read&nbsp;from&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;GNU&nbsp;MathProg&nbsp;file&nbsp;containing&nbsp;model&nbsp;and&nbsp;data.<br>
+<a href="#LPX">LPX</a>(mps=filename)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;Linear&nbsp;program&nbsp;with&nbsp;data&nbsp;read&nbsp;from&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datafile&nbsp;in&nbsp;fixed&nbsp;MPS&nbsp;format.<br>
+<a href="#LPX">LPX</a>(freemps=filename)&nbsp;--&gt;&nbsp;Linear&nbsp;program&nbsp;with&nbsp;data&nbsp;read&nbsp;from&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datafile&nbsp;in&nbsp;free&nbsp;MPS&nbsp;format.<br>
+<a href="#LPX">LPX</a>(cpxlp=filename)&nbsp;&nbsp;&nbsp;--&gt;&nbsp;Linear&nbsp;program&nbsp;with&nbsp;data&nbsp;read&nbsp;from&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datafile&nbsp;in&nbsp;fixed&nbsp;CPLEX&nbsp;LP&nbsp;format.<br>
+<a href="#LPX">LPX</a>(glp=filename)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;Linear&nbsp;program&nbsp;with&nbsp;data&nbsp;read&nbsp;from&nbsp;a<br>
+&nbsp;&nbsp;&nbsp;&nbsp;datafile&nbsp;in&nbsp;GNU&nbsp;LP&nbsp;format.<br>
+<a href="#LPX">LPX</a>(gmp=(model_filename,[data_filename,[output_filename]])--&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Linear&nbsp;program&nbsp;from&nbsp;GNU&nbsp;MathProg&nbsp;input&nbsp;files.&nbsp;&nbsp;The&nbsp;first<br>
+&nbsp;&nbsp;&nbsp;&nbsp;element&nbsp;is&nbsp;a&nbsp;path&nbsp;to&nbsp;the&nbsp;model&nbsp;second,&nbsp;the&nbsp;second&nbsp;to&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;data&nbsp;section.&nbsp;&nbsp;If&nbsp;the&nbsp;second&nbsp;element&nbsp;is&nbsp;omitted&nbsp;or&nbsp;is&nbsp;None<br>
+&nbsp;&nbsp;&nbsp;&nbsp;then&nbsp;the&nbsp;model&nbsp;file&nbsp;is&nbsp;presumed&nbsp;to&nbsp;also&nbsp;hold&nbsp;the&nbsp;data.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;third&nbsp;elment&nbsp;holds&nbsp;the&nbsp;output&nbsp;data&nbsp;file&nbsp;to&nbsp;write<br>
+&nbsp;&nbsp;&nbsp;&nbsp;display&nbsp;statements&nbsp;to.&nbsp;&nbsp;If&nbsp;omitted&nbsp;or&nbsp;None,&nbsp;the&nbsp;output<br>
+&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;instead&nbsp;put&nbsp;through&nbsp;to&nbsp;standard&nbsp;output.<br>
+&nbsp;<br>
+This&nbsp;represents&nbsp;a&nbsp;linear&nbsp;program&nbsp;<a href="__builtin__.html#object">object</a>.&nbsp;&nbsp;It&nbsp;holds&nbsp;data&nbsp;and<br>
+offers&nbsp;methods&nbsp;relevant&nbsp;to&nbsp;the&nbsp;whole&nbsp;of&nbsp;the&nbsp;linear&nbsp;program.<br>
+There&nbsp;are&nbsp;many&nbsp;members&nbsp;in&nbsp;this&nbsp;class,&nbsp;but&nbsp;the&nbsp;most&nbsp;important<br>
+are:<br>
+&nbsp;&nbsp;obj&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Represents&nbsp;the&nbsp;objective&nbsp;function.<br>
+&nbsp;&nbsp;rows&nbsp;&nbsp;&nbsp;&nbsp;A&nbsp;collection&nbsp;over&nbsp;which&nbsp;one&nbsp;can&nbsp;access&nbsp;rows.<br>
+&nbsp;&nbsp;cols&nbsp;&nbsp;&nbsp;&nbsp;Same,&nbsp;but&nbsp;for&nbsp;columns.<br>
+&nbsp;&nbsp;params&nbsp;&nbsp;Holds&nbsp;control&nbsp;parameters&nbsp;and&nbsp;statistics.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="LPX-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;x.__class__.__doc__&nbsp;for&nbsp;signature</tt></dd></dl>
+
+<dl><dt><a name="LPX-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
+
+<dl><dt><a name="LPX-__str__"><strong>__str__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__str__">__str__</a>()&nbsp;&lt;==&gt;&nbsp;str(x)</tt></dd></dl>
+
+<dl><dt><a name="LPX-adv_basis"><strong>adv_basis</strong></a>(...)</dt><dd><tt><a href="#LPX-adv_basis">adv_basis</a>()<br>
+&nbsp;<br>
+Construct&nbsp;an&nbsp;advanced&nbsp;initial&nbsp;basis,&nbsp;triangular&nbsp;with&nbsp;as&nbsp;few<br>
+variables&nbsp;as&nbsp;possible&nbsp;fixed.</tt></dd></dl>
+
+<dl><dt><a name="LPX-cpx_basis"><strong>cpx_basis</strong></a>(...)</dt><dd><tt><a href="#LPX-cpx_basis">cpx_basis</a>()<br>
+&nbsp;<br>
+Construct&nbsp;an&nbsp;advanced&nbsp;Bixby&nbsp;basis.<br>
+&nbsp;<br>
+This&nbsp;basis&nbsp;construction&nbsp;method&nbsp;is&nbsp;described&nbsp;in:<br>
+Robert&nbsp;E.&nbsp;Bixby.&nbsp;Implementing&nbsp;the&nbsp;Simplex&nbsp;Method:&nbsp;The&nbsp;Initial<br>
+Basis.&nbsp;&nbsp;ORSA&nbsp;Journal&nbsp;on&nbsp;Computing,&nbsp;Vol.&nbsp;4,&nbsp;No.&nbsp;3,&nbsp;1992,<br>
+pp.&nbsp;267-84.</tt></dd></dl>
+
+<dl><dt><a name="LPX-exact"><strong>exact</strong></a>(...)</dt><dd><tt><a href="#LPX-exact">exact</a>()<br>
+&nbsp;<br>
+Attempt&nbsp;to&nbsp;solve&nbsp;the&nbsp;problem&nbsp;using&nbsp;an&nbsp;exact&nbsp;simplex&nbsp;method.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
+strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
+&nbsp;<br>
+fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns,&nbsp;or&nbsp;the&nbsp;initial&nbsp;basis<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;invalid,&nbsp;or&nbsp;the&nbsp;initial&nbsp;basis&nbsp;matrix&nbsp;is&nbsp;singular<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;ill-conditioned.<br>
+itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
+tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.</tt></dd></dl>
+
+<dl><dt><a name="LPX-integer"><strong>integer</strong></a>(...)</dt><dd><tt><a href="#LPX-intopt">intopt</a>()<br>
+&nbsp;<br>
+MIP&nbsp;solver&nbsp;based&nbsp;on&nbsp;branch-and-bound.<br>
+&nbsp;<br>
+This&nbsp;method&nbsp;requires&nbsp;a&nbsp;mixed-integer&nbsp;problem&nbsp;where&nbsp;an&nbsp;optimal<br>
+solution&nbsp;to&nbsp;an&nbsp;LP&nbsp;relaxation&nbsp;(either&nbsp;through&nbsp;<a href="#LPX-simplex">simplex</a>()&nbsp;or<br>
+<a href="#LPX-exact">exact</a>())&nbsp;has&nbsp;already&nbsp;been&nbsp;found.&nbsp;&nbsp;Alternately,&nbsp;try&nbsp;<a href="#LPX-intopt">intopt</a>().<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
+strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
+&nbsp;<br>
+fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns,&nbsp;or&nbsp;it&nbsp;is&nbsp;not&nbsp;a&nbsp;MIP<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;problem,&nbsp;or&nbsp;integer&nbsp;variables&nbsp;have&nbsp;non-int&nbsp;bounds.<br>
+nopfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;primal&nbsp;feasible&nbsp;solution.<br>
+nodfs&nbsp;&nbsp;&nbsp;--&nbsp;Relaxation&nbsp;has&nbsp;no&nbsp;dual&nbsp;feasible&nbsp;solution.<br>
+itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
+tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.<br>
+sing&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Error&nbsp;occurred&nbsp;solving&nbsp;an&nbsp;LP&nbsp;relaxation&nbsp;subproblem.</tt></dd></dl>
+
+<dl><dt><a name="LPX-interior"><strong>interior</strong></a>(...)</dt><dd><tt><a href="#LPX-interior">interior</a>()<br>
+&nbsp;<br>
+Attempt&nbsp;to&nbsp;solve&nbsp;the&nbsp;problem&nbsp;using&nbsp;an&nbsp;interior-point&nbsp;method.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
+strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
+&nbsp;<br>
+fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns.<br>
+nofeas&nbsp;&nbsp;--&nbsp;The&nbsp;problem&nbsp;has&nbsp;no&nbsp;feasible&nbsp;(primal/dual)&nbsp;solution.<br>
+noconv&nbsp;&nbsp;--&nbsp;Very&nbsp;slow&nbsp;convergence&nbsp;or&nbsp;divergence.<br>
+itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
+instab&nbsp;&nbsp;--&nbsp;Numerical&nbsp;instability&nbsp;when&nbsp;solving&nbsp;Newtonian&nbsp;system.</tt></dd></dl>
+
+<dl><dt><a name="LPX-intopt"><strong>intopt</strong></a>(...)</dt><dd><tt><a href="#LPX-intopt">intopt</a>()<br>
+&nbsp;<br>
+More&nbsp;advanced&nbsp;MIP&nbsp;branch-and-bound&nbsp;solver&nbsp;than&nbsp;<a href="#LPX-integer">integer</a>().&nbsp;This<br>
+variant&nbsp;does&nbsp;not&nbsp;require&nbsp;an&nbsp;existing&nbsp;LP&nbsp;relaxation.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
+strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
+&nbsp;<br>
+fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns,&nbsp;or&nbsp;it&nbsp;is&nbsp;not&nbsp;a&nbsp;MIP<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;problem,&nbsp;or&nbsp;integer&nbsp;variables&nbsp;have&nbsp;non-int&nbsp;bounds.<br>
+nopfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;primal&nbsp;feasible&nbsp;solution.<br>
+nodfs&nbsp;&nbsp;&nbsp;--&nbsp;Relaxation&nbsp;has&nbsp;no&nbsp;dual&nbsp;feasible&nbsp;solution.<br>
+itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
+tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.<br>
+sing&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Error&nbsp;occurred&nbsp;solving&nbsp;an&nbsp;LP&nbsp;relaxation&nbsp;subproblem.</tt></dd></dl>
+
+<dl><dt><a name="LPX-kkt"><strong>kkt</strong></a>(...)</dt><dd><tt><a href="#LPX-kkt">kkt</a>([scaled=False])<br>
+&nbsp;<br>
+Return&nbsp;an&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;encapsulating&nbsp;the&nbsp;results&nbsp;of&nbsp;a&nbsp;check&nbsp;on&nbsp;the<br>
+Karush-Kuhn-Tucker&nbsp;optimality&nbsp;conditions&nbsp;for&nbsp;a&nbsp;basic&nbsp;(simplex)<br>
+solution.&nbsp;&nbsp;If&nbsp;the&nbsp;argument&nbsp;'scaled'&nbsp;is&nbsp;true,&nbsp;return&nbsp;results&nbsp;<br>
+of&nbsp;checking&nbsp;the&nbsp;internal&nbsp;scaled&nbsp;instance&nbsp;of&nbsp;the&nbsp;LP&nbsp;instead.</tt></dd></dl>
+
+<dl><dt><a name="LPX-kktint"><strong>kktint</strong></a>(...)</dt><dd><tt><a href="#LPX-kktint">kktint</a>()<br>
+&nbsp;<br>
+Similar&nbsp;to&nbsp;<a href="#LPX-kkt">kkt</a>(),&nbsp;except&nbsp;analyzes&nbsp;solution&nbsp;quality&nbsp;of&nbsp;an<br>
+mixed-integer&nbsp;solution.&nbsp;&nbsp;Note&nbsp;that&nbsp;only&nbsp;the&nbsp;primal&nbsp;components<br>
+of&nbsp;the&nbsp;<a href="#KKT">KKT</a>&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;will&nbsp;have&nbsp;meaningful&nbsp;values.</tt></dd></dl>
+
+<dl><dt><a name="LPX-read_basis"><strong>read_basis</strong></a>(...)</dt><dd><tt><a href="#LPX-read_basis">read_basis</a>(filename)<br>
+&nbsp;<br>
+Reads&nbsp;an&nbsp;LP&nbsp;basis&nbsp;in&nbsp;the&nbsp;fixed&nbsp;MPS&nbsp;format&nbsp;from&nbsp;a&nbsp;given&nbsp;file.</tt></dd></dl>
+
+<dl><dt><a name="LPX-scale"><strong>scale</strong></a>(...)</dt><dd><tt><a href="#LPX-scale">scale</a>([toscale=True])<br>
+&nbsp;<br>
+Either&nbsp;scale&nbsp;or&nbsp;unscale&nbsp;depending&nbsp;on&nbsp;truth&nbsp;of&nbsp;the&nbsp;argument.<br>
+Note&nbsp;that&nbsp;this&nbsp;only&nbsp;affects&nbsp;the&nbsp;internal&nbsp;state&nbsp;of&nbsp;the&nbsp;LP<br>
+representation.</tt></dd></dl>
+
+<dl><dt><a name="LPX-simplex"><strong>simplex</strong></a>(...)</dt><dd><tt><a href="#LPX-simplex">simplex</a>()<br>
+&nbsp;<br>
+Attempt&nbsp;to&nbsp;solve&nbsp;the&nbsp;problem&nbsp;using&nbsp;a&nbsp;simplex&nbsp;method.<br>
+&nbsp;<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
+strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
+&nbsp;<br>
+fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns,&nbsp;or&nbsp;the&nbsp;initial&nbsp;basis<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;invalid,&nbsp;or&nbsp;the&nbsp;initial&nbsp;basis&nbsp;matrix&nbsp;is&nbsp;singular<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;ill-conditioned.<br>
+objll&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;objective&nbsp;reached&nbsp;its&nbsp;lower&nbsp;limit.<br>
+objul&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;objective&nbsp;reached&nbsp;its&nbsp;upper&nbsp;limit.<br>
+itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
+tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.<br>
+sing&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;basis&nbsp;matrix&nbsp;became&nbsp;singular&nbsp;or&nbsp;ill-conditioned.<br>
+nopfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;primal&nbsp;feasible&nbsp;solution.&nbsp;(Presolver&nbsp;only.)<br>
+nodfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;dual&nbsp;feasible&nbsp;solution.&nbsp;(Presolver&nbsp;only.)</tt></dd></dl>
+
+<dl><dt><a name="LPX-std_basis"><strong>std_basis</strong></a>(...)</dt><dd><tt><a href="#LPX-std_basis">std_basis</a>()<br>
+&nbsp;<br>
+Construct&nbsp;the&nbsp;standard&nbsp;trivial&nbsp;inital&nbsp;basis&nbsp;for&nbsp;this&nbsp;LP.</tt></dd></dl>
+
+<dl><dt><a name="LPX-write"><strong>write</strong></a>(...)</dt><dd><tt><a href="#LPX-write">write</a>(format=filename)<br>
+&nbsp;<br>
+Output&nbsp;data&nbsp;about&nbsp;the&nbsp;linear&nbsp;program&nbsp;into&nbsp;a&nbsp;file&nbsp;with&nbsp;a&nbsp;given<br>
+format.&nbsp;&nbsp;What&nbsp;data&nbsp;is&nbsp;written,&nbsp;and&nbsp;how&nbsp;it&nbsp;is&nbsp;written,&nbsp;depends<br>
+on&nbsp;which&nbsp;of&nbsp;the&nbsp;format&nbsp;keywords&nbsp;are&nbsp;used.&nbsp;&nbsp;Note&nbsp;that&nbsp;one&nbsp;may<br>
+specify&nbsp;multiple&nbsp;format&nbsp;and&nbsp;filename&nbsp;pairs&nbsp;to&nbsp;write&nbsp;multiple<br>
+types&nbsp;and&nbsp;formats&nbsp;of&nbsp;data&nbsp;in&nbsp;one&nbsp;call&nbsp;to&nbsp;this&nbsp;function.<br>
+&nbsp;<br>
+mps&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;For&nbsp;problem&nbsp;data&nbsp;in&nbsp;the&nbsp;fixed&nbsp;MPS&nbsp;format.<br>
+bas&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;current&nbsp;LP&nbsp;basis&nbsp;in&nbsp;fixed&nbsp;MPS&nbsp;format.<br>
+freemps&nbsp;&nbsp;&nbsp;--&nbsp;Problem&nbsp;data&nbsp;in&nbsp;the&nbsp;free&nbsp;MPS&nbsp;format.<br>
+cpxlp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Problem&nbsp;data&nbsp;in&nbsp;the&nbsp;CPLEX&nbsp;LP&nbsp;format.<br>
+glp&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Problem&nbsp;data&nbsp;in&nbsp;the&nbsp;GNU&nbsp;LP&nbsp;format.<br>
+prob&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Problem&nbsp;data&nbsp;in&nbsp;a&nbsp;plain&nbsp;text&nbsp;format.<br>
+sol&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Basic&nbsp;solution&nbsp;in&nbsp;printable&nbsp;format.<br>
+sens_bnds&nbsp;--&nbsp;Bounds&nbsp;sensitivity&nbsp;information.<br>
+ips&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Interior-point&nbsp;solution&nbsp;in&nbsp;printable&nbsp;format.<br>
+mip&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;MIP&nbsp;solution&nbsp;in&nbsp;printable&nbsp;format.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>cols</strong></dt>
+<dd><tt>Column&nbsp;collection.&nbsp;&nbsp;See&nbsp;the&nbsp;help&nbsp;on&nbsp;class&nbsp;BarCollection.</tt></dd>
+</dl>
+<dl><dt><strong>kind</strong></dt>
+<dd><tt>Either&nbsp;the&nbsp;type&nbsp;'float'&nbsp;if&nbsp;this&nbsp;is&nbsp;a&nbsp;pure&nbsp;linear&nbsp;programming<br>
+(LP)&nbsp;problem,&nbsp;or&nbsp;the&nbsp;type&nbsp;'int'&nbsp;if&nbsp;this&nbsp;is&nbsp;a&nbsp;mixed&nbsp;integer<br>
+programming&nbsp;(MIP)&nbsp;problem.</tt></dd>
+</dl>
+<dl><dt><strong>matrix</strong></dt>
+<dd><tt>The&nbsp;constraint&nbsp;matrix&nbsp;as&nbsp;a&nbsp;list&nbsp;of&nbsp;three&nbsp;element&nbsp;(row&nbsp;index,<br>
+column&nbsp;index,&nbsp;value)&nbsp;tuples&nbsp;across&nbsp;all&nbsp;non-zero&nbsp;elements&nbsp;of<br>
+the&nbsp;constraint&nbsp;matrix.</tt></dd>
+</dl>
+<dl><dt><strong>name</strong></dt>
+<dd><tt>Problem&nbsp;name,&nbsp;or&nbsp;None&nbsp;if&nbsp;unset.</tt></dd>
+</dl>
+<dl><dt><strong>nbin</strong></dt>
+<dd><tt>The&nbsp;number&nbsp;of&nbsp;binary&nbsp;column&nbsp;variables,&nbsp;i.e.,&nbsp;integer&nbsp;with&nbsp;0<br>
+to&nbsp;1&nbsp;bounds.&nbsp;&nbsp;Always&nbsp;0&nbsp;if&nbsp;this&nbsp;is&nbsp;not&nbsp;a&nbsp;mixed&nbsp;integer&nbsp;problem.</tt></dd>
+</dl>
+<dl><dt><strong>nint</strong></dt>
+<dd><tt>The&nbsp;number&nbsp;of&nbsp;integer&nbsp;column&nbsp;variables.&nbsp;&nbsp;Always&nbsp;0&nbsp;if&nbsp;this&nbsp;is<br>
+not&nbsp;a&nbsp;mixed&nbsp;integer&nbsp;problem.</tt></dd>
+</dl>
+<dl><dt><strong>nnz</strong></dt>
+<dd><tt>Number&nbsp;of&nbsp;non-zero&nbsp;constraint&nbsp;coefficients.</tt></dd>
+</dl>
+<dl><dt><strong>obj</strong></dt>
+<dd><tt>Objective&nbsp;function&nbsp;object.</tt></dd>
+</dl>
+<dl><dt><strong>params</strong></dt>
+<dd><tt>Control&nbsp;parameter&nbsp;collection.&nbsp;&nbsp;See&nbsp;the&nbsp;help&nbsp;on&nbsp;class&nbsp;Params.</tt></dd>
+</dl>
+<dl><dt><strong>ray</strong></dt>
+<dd><tt>A&nbsp;non-basic&nbsp;row&nbsp;or&nbsp;column&nbsp;the&nbsp;simplex&nbsp;solver&nbsp;has&nbsp;identified<br>
+as&nbsp;causing&nbsp;primal&nbsp;unboundness,&nbsp;or&nbsp;None&nbsp;if&nbsp;no&nbsp;such&nbsp;variable<br>
+has&nbsp;been&nbsp;identified.</tt></dd>
+</dl>
+<dl><dt><strong>rows</strong></dt>
+<dd><tt>Row&nbsp;collection.&nbsp;&nbsp;See&nbsp;the&nbsp;help&nbsp;on&nbsp;class&nbsp;BarCollection.</tt></dd>
+</dl>
+<dl><dt><strong>status</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;solution&nbsp;of&nbsp;the&nbsp;last&nbsp;solver.&nbsp;&nbsp;This&nbsp;takes&nbsp;the<br>
+form&nbsp;of&nbsp;a&nbsp;string&nbsp;with&nbsp;these&nbsp;possible&nbsp;values.<br>
+&nbsp;<br>
+opt&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;solution&nbsp;is&nbsp;optimal.<br>
+undef&nbsp;&nbsp;--&nbsp;The&nbsp;solution&nbsp;is&nbsp;undefined.<br>
+feas&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;solution&nbsp;is&nbsp;feasible,&nbsp;but&nbsp;not&nbsp;necessarily&nbsp;optimal.<br>
+infeas&nbsp;--&nbsp;The&nbsp;solution&nbsp;is&nbsp;infeasible.<br>
+nofeas&nbsp;--&nbsp;The&nbsp;problem&nbsp;has&nbsp;no&nbsp;feasible&nbsp;solution.<br>
+unbnd&nbsp;&nbsp;--&nbsp;The&nbsp;problem&nbsp;has&nbsp;an&nbsp;unbounded&nbsp;solution.</tt></dd>
+</dl>
+<dl><dt><strong>status_dual</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;the&nbsp;dual&nbsp;solution&nbsp;of&nbsp;the&nbsp;simplex&nbsp;solver.<br>
+Possible&nbsp;values&nbsp;are&nbsp;'undef',&nbsp;'feas',&nbsp;'infeas',&nbsp;'nofeas'&nbsp;in<br>
+similar&nbsp;meaning&nbsp;to&nbsp;the&nbsp;.status&nbsp;attribute.</tt></dd>
+</dl>
+<dl><dt><strong>status_i</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;the&nbsp;interior&nbsp;point&nbsp;solver's&nbsp;solution.</tt></dd>
+</dl>
+<dl><dt><strong>status_m</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;the&nbsp;MIP&nbsp;solver's&nbsp;solution.</tt></dd>
+</dl>
+<dl><dt><strong>status_primal</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;the&nbsp;primal&nbsp;solution&nbsp;of&nbsp;the&nbsp;simplex&nbsp;solver.<br>
+Possible&nbsp;values&nbsp;are&nbsp;'undef',&nbsp;'feas',&nbsp;'infeas',&nbsp;'nofeas'&nbsp;in<br>
+similar&nbsp;meaning&nbsp;to&nbsp;the&nbsp;.status&nbsp;attribute.</tt></dd>
+</dl>
+<dl><dt><strong>status_s</strong></dt>
+<dd><tt>The&nbsp;status&nbsp;of&nbsp;the&nbsp;simplex&nbsp;solver's&nbsp;solution.</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object at 0x788004&gt;<dd><tt>T.<a href="#LPX-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Objective">class <strong>Objective</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Objective">Objective</a>&nbsp;function&nbsp;objects&nbsp;for&nbsp;linear&nbsp;programs.&nbsp;&nbsp;An&nbsp;instance&nbsp;is<br>
+used&nbsp;either&nbsp;to&nbsp;access&nbsp;objective&nbsp;function&nbsp;values&nbsp;for&nbsp;solutions,<br>
+or&nbsp;to&nbsp;access&nbsp;or&nbsp;set&nbsp;objective&nbsp;function&nbsp;coefficients.&nbsp;&nbsp;The&nbsp;same<br>
+indices&nbsp;valid&nbsp;for&nbsp;a&nbsp;<a href="#BarCollection">BarCollection</a>&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;over&nbsp;the&nbsp;columns<br>
+(that&nbsp;is,&nbsp;column&nbsp;numeric&nbsp;indices,&nbsp;column&nbsp;names,&nbsp;slices,<br>
+multiple&nbsp;values)&nbsp;are&nbsp;also&nbsp;valid&nbsp;for&nbsp;indexing&nbsp;into&nbsp;this&nbsp;<a href="__builtin__.html#object">object</a>.<br>
+The&nbsp;special&nbsp;index&nbsp;None&nbsp;is&nbsp;used&nbsp;to&nbsp;specify&nbsp;the&nbsp;shift&nbsp;term.&nbsp;&nbsp;If<br>
+we&nbsp;have&nbsp;an&nbsp;<a href="#LPX">LPX</a>&nbsp;instance&nbsp;lp,&nbsp;we&nbsp;may&nbsp;have:<br>
+&nbsp;<br>
+lp.obj[0]&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;first&nbsp;objective&nbsp;coefficient<br>
+lp.obj[None]&nbsp;--&gt;&nbsp;the&nbsp;shift&nbsp;term<br>
+lp.obj[-3:]&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;last&nbsp;three&nbsp;objective&nbsp;coefficients<br>
+&nbsp;<br>
+lp.obj[1,4]&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;objective&nbsp;coefficients&nbsp;1,&nbsp;4<br>
+When&nbsp;assigning&nbsp;objective&nbsp;coefficients,&nbsp;for&nbsp;single&nbsp;indices&nbsp;one<br>
+may&nbsp;assign&nbsp;a&nbsp;single&nbsp;number.&nbsp;&nbsp;For&nbsp;multiple&nbsp;indices,&nbsp;one&nbsp;may<br>
+assign&nbsp;a&nbsp;single&nbsp;number&nbsp;to&nbsp;make&nbsp;all&nbsp;indicated&nbsp;coefficients<br>
+identical,&nbsp;or&nbsp;specify&nbsp;an&nbsp;iterable&nbsp;of&nbsp;equal&nbsp;length&nbsp;to&nbsp;set&nbsp;them<br>
+all&nbsp;individiaully.&nbsp;&nbsp;For&nbsp;example:<br>
+&nbsp;<br>
+lp.obj[0]=2.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;set&nbsp;the&nbsp;first&nbsp;objective&nbsp;coef&nbsp;to&nbsp;2.5<br>
+lp.obj[-3:]=1.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;the&nbsp;last&nbsp;three&nbsp;obj&nbsp;coefs&nbsp;get&nbsp;1.0<br>
+lp.obj[1,4]=-2.0,2.0&nbsp;--&gt;&nbsp;obj&nbsp;coefs&nbsp;1,&nbsp;4&nbsp;get&nbsp;-2.0,&nbsp;2.0<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Objective-__delitem__"><strong>__delitem__</strong></a>(...)</dt><dd><tt>x.<a href="#Objective-__delitem__">__delitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;del&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="Objective-__getitem__"><strong>__getitem__</strong></a>(...)</dt><dd><tt>x.<a href="#Objective-__getitem__">__getitem__</a>(y)&nbsp;&lt;==&gt;&nbsp;x[y]</tt></dd></dl>
+
+<dl><dt><a name="Objective-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#Objective-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="Objective-__len__"><strong>__len__</strong></a>(...)</dt><dd><tt>x.<a href="#Objective-__len__">__len__</a>()&nbsp;&lt;==&gt;&nbsp;len(x)</tt></dd></dl>
+
+<dl><dt><a name="Objective-__setitem__"><strong>__setitem__</strong></a>(...)</dt><dd><tt>x.<a href="#Objective-__setitem__">__setitem__</a>(i,&nbsp;y)&nbsp;&lt;==&gt;&nbsp;x[i]=y</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>maximize</strong></dt>
+<dd><tt>True&nbsp;or&nbsp;False&nbsp;depending&nbsp;on&nbsp;whether&nbsp;we&nbsp;are&nbsp;trying&nbsp;to&nbsp;maximize<br>
+or&nbsp;minimize&nbsp;this&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+<dl><dt><strong>name</strong></dt>
+<dd><tt>Objective&nbsp;name,&nbsp;or&nbsp;None&nbsp;if&nbsp;unset.</tt></dd>
+</dl>
+<dl><dt><strong>shift</strong></dt>
+<dd><tt>The&nbsp;constant&nbsp;shift&nbsp;term&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+<dl><dt><strong>value</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;value&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+<dl><dt><strong>value_i</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;value&nbsp;of&nbsp;the&nbsp;interior&nbsp;point&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+<dl><dt><strong>value_m</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;value&nbsp;of&nbsp;the&nbsp;MIP&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+<dl><dt><strong>value_s</strong></dt>
+<dd><tt>The&nbsp;current&nbsp;value&nbsp;of&nbsp;the&nbsp;simplex&nbsp;objective&nbsp;function.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ObjectiveIter">class <strong>ObjectiveIter</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Objective">Objective</a>&nbsp;function&nbsp;iterator&nbsp;objects,&nbsp;used&nbsp;to&nbsp;cycle&nbsp;over&nbsp;the<br>
+coefficients&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ObjectiveIter-__getattribute__"><strong>__getattribute__</strong></a>(...)</dt><dd><tt>x.<a href="#ObjectiveIter-__getattribute__">__getattribute__</a>('name')&nbsp;&lt;==&gt;&nbsp;x.name</tt></dd></dl>
+
+<dl><dt><a name="ObjectiveIter-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#ObjectiveIter-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="ObjectiveIter-__len__"><strong>__len__</strong></a>(...)</dt><dd><tt>x.<a href="#ObjectiveIter-__len__">__len__</a>()&nbsp;&lt;==&gt;&nbsp;len(x)</tt></dd></dl>
+
+<dl><dt><a name="ObjectiveIter-next"><strong>next</strong></a>(...)</dt><dd><tt>x.<a href="#ObjectiveIter-next">next</a>()&nbsp;-&gt;&nbsp;the&nbsp;next&nbsp;value,&nbsp;or&nbsp;raise&nbsp;StopIteration</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Params">class <strong>Params</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Parameter&nbsp;and&nbsp;statistics&nbsp;collection&nbsp;objects.&nbsp;&nbsp;An&nbsp;instance&nbsp;of<br>
+this&nbsp;exists&nbsp;as&nbsp;the&nbsp;'params'&nbsp;attribute&nbsp;of&nbsp;<a href="#LPX">LPX</a>&nbsp;instances.&nbsp;&nbsp;By<br>
+changing&nbsp;parameters&nbsp;here,&nbsp;one&nbsp;may&nbsp;affect&nbsp;the&nbsp;behavior&nbsp;of<br>
+the&nbsp;solvers,&nbsp;data&nbsp;readers,&nbsp;writers,&nbsp;verbosity,&nbsp;etc.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Params-reset"><strong>reset</strong></a>(...)</dt><dd><tt><a href="#Params-reset">reset</a>()<br>
+&nbsp;<br>
+Resets&nbsp;all&nbsp;control&nbsp;parameters&nbsp;to&nbsp;their&nbsp;default&nbsp;values.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>branch</strong></dt>
+<dd><tt>Branching&nbsp;heuristic&nbsp;option&nbsp;(for&nbsp;MIP&nbsp;only):<br>
+0&nbsp;--&nbsp;branch&nbsp;on&nbsp;first&nbsp;variable<br>
+1&nbsp;--&nbsp;branch&nbsp;on&nbsp;last&nbsp;variable<br>
+2&nbsp;--&nbsp;branch&nbsp;using&nbsp;a&nbsp;heuristic&nbsp;by&nbsp;Driebeck&nbsp;and&nbsp;Tomlin</tt></dd>
+</dl>
+<dl><dt><strong>btrack</strong></dt>
+<dd><tt>Backtracking&nbsp;heuristic&nbsp;option&nbsp;(for&nbsp;MIP&nbsp;only):<br>
+0&nbsp;--&nbsp;depth&nbsp;first&nbsp;search<br>
+1&nbsp;--&nbsp;breadth&nbsp;first&nbsp;search<br>
+2&nbsp;--&nbsp;backtrack&nbsp;using&nbsp;the&nbsp;best&nbsp;projection&nbsp;heuristic</tt></dd>
+</dl>
+<dl><dt><strong>dual</strong></dt>
+<dd><tt>Whether&nbsp;to,&nbsp;if&nbsp;the&nbsp;initial&nbsp;basic&nbsp;solution&nbsp;is&nbsp;dual&nbsp;feasible,&nbsp;use<br>
+the&nbsp;dual&nbsp;simplex.</tt></dd>
+</dl>
+<dl><dt><strong>itcnt</strong></dt>
+<dd><tt>Simplex&nbsp;iterations&nbsp;count.&nbsp;&nbsp;This&nbsp;count&nbsp;is&nbsp;increased&nbsp;by&nbsp;one&nbsp;each<br>
+time&nbsp;when&nbsp;one&nbsp;simplex&nbsp;iteration&nbsp;has&nbsp;been&nbsp;performed.</tt></dd>
+</dl>
+<dl><dt><strong>itlim</strong></dt>
+<dd><tt>Simplex&nbsp;iterations&nbsp;limit.&nbsp;&nbsp;If&nbsp;this&nbsp;value&nbsp;is&nbsp;positive,&nbsp;it&nbsp;is<br>
+decreased&nbsp;by&nbsp;one&nbsp;each&nbsp;time&nbsp;when&nbsp;one&nbsp;simplex&nbsp;iteration&nbsp;has&nbsp;been<br>
+performed,&nbsp;and&nbsp;reaching&nbsp;zero&nbsp;value&nbsp;signals&nbsp;the&nbsp;solver&nbsp;to&nbsp;stop<br>
+the&nbsp;search.&nbsp;&nbsp;Negative&nbsp;value&nbsp;means&nbsp;no&nbsp;iterations&nbsp;limit.</tt></dd>
+</dl>
+<dl><dt><strong>mpsfree</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;MIPS&nbsp;writer&nbsp;should&nbsp;omit&nbsp;column&nbsp;and&nbsp;vector&nbsp;names<br>
+whenever&nbsp;possible&nbsp;(free&nbsp;style).&nbsp;&nbsp;&nbsp;If&nbsp;False,&nbsp;the&nbsp;writer&nbsp;never<br>
+omits&nbsp;names&nbsp;(pedantic&nbsp;style).</tt></dd>
+</dl>
+<dl><dt><strong>mpsinfo</strong></dt>
+<dd><tt>Whether&nbsp;when&nbsp;writing&nbsp;MPS&nbsp;data,&nbsp;comments&nbsp;containing<br>
+information&nbsp;on&nbsp;the&nbsp;problem&nbsp;should&nbsp;be&nbsp;written&nbsp;as&nbsp;well.</tt></dd>
+</dl>
+<dl><dt><strong>mpsobj</strong></dt>
+<dd><tt>How&nbsp;the&nbsp;objective&nbsp;function&nbsp;should&nbsp;be&nbsp;output&nbsp;in&nbsp;MPS&nbsp;writing:<br>
+0&nbsp;--&nbsp;never&nbsp;output&nbsp;objective&nbsp;function&nbsp;row<br>
+1&nbsp;--&nbsp;always&nbsp;output&nbsp;objective&nbsp;function&nbsp;row<br>
+2&nbsp;--&nbsp;output&nbsp;objective&nbsp;function&nbsp;row&nbsp;if&nbsp;the&nbsp;problem&nbsp;has&nbsp;no&nbsp;free&nbsp;rows</tt></dd>
+</dl>
+<dl><dt><strong>mpsorig</strong></dt>
+<dd><tt>Whether&nbsp;when&nbsp;writing&nbsp;MPS&nbsp;data,&nbsp;the&nbsp;original&nbsp;symbolic&nbsp;names<br>
+for&nbsp;rows&nbsp;and&nbsp;columns&nbsp;should&nbsp;be&nbsp;used.&nbsp;&nbsp;If&nbsp;False,&nbsp;when&nbsp;writing,<br>
+plain&nbsp;names&nbsp;are&nbsp;generated&nbsp;from&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;row&nbsp;and&nbsp;column<br>
+(counting&nbsp;from&nbsp;1).</tt></dd>
+</dl>
+<dl><dt><strong>mpsskip</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;MIPS&nbsp;writer&nbsp;should&nbsp;skip&nbsp;empty&nbsp;columns.</tt></dd>
+</dl>
+<dl><dt><strong>mpswide</strong></dt>
+<dd><tt>Whether&nbsp;when&nbsp;writing&nbsp;MIPS,&nbsp;all&nbsp;data&nbsp;fields&nbsp;should&nbsp;be&nbsp;used.<br>
+If&nbsp;False,&nbsp;fields&nbsp;5&nbsp;and&nbsp;6&nbsp;are&nbsp;kept&nbsp;empty.</tt></dd>
+</dl>
+<dl><dt><strong>msglev</strong></dt>
+<dd><tt>Output&nbsp;level&nbsp;for&nbsp;solver&nbsp;routines:<br>
+0&nbsp;--&nbsp;none<br>
+1&nbsp;--&nbsp;error&nbsp;messages<br>
+2&nbsp;--&nbsp;normal<br>
+3&nbsp;--&nbsp;full&nbsp;information</tt></dd>
+</dl>
+<dl><dt><strong>objll</strong></dt>
+<dd><tt>Lower&nbsp;limit&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.&nbsp;&nbsp;If&nbsp;on&nbsp;the&nbsp;phase&nbsp;II<br>
+the&nbsp;objective&nbsp;function&nbsp;reaches&nbsp;this&nbsp;limit&nbsp;and&nbsp;continues<br>
+decreasing,&nbsp;the&nbsp;solver&nbsp;stops&nbsp;the&nbsp;search.&nbsp;&nbsp;(Used&nbsp;in&nbsp;the&nbsp;dual<br>
+simplex&nbsp;only.)</tt></dd>
+</dl>
+<dl><dt><strong>objul</strong></dt>
+<dd><tt>Lower&nbsp;limit&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.&nbsp;&nbsp;If&nbsp;on&nbsp;the&nbsp;phase&nbsp;II<br>
+the&nbsp;objective&nbsp;function&nbsp;reaches&nbsp;this&nbsp;limit&nbsp;and&nbsp;continues<br>
+increasing,&nbsp;the&nbsp;solver&nbsp;stops&nbsp;the&nbsp;search.&nbsp;&nbsp;(Used&nbsp;in&nbsp;the&nbsp;dual<br>
+simplex&nbsp;only.)</tt></dd>
+</dl>
+<dl><dt><strong>outdly</strong></dt>
+<dd><tt>Output&nbsp;delay,&nbsp;in&nbsp;seconds.&nbsp;&nbsp;This&nbsp;parameter&nbsp;specifies&nbsp;how&nbsp;long<br>
+the&nbsp;solver&nbsp;should&nbsp;delay&nbsp;sending&nbsp;information&nbsp;about&nbsp;the&nbsp;solution<br>
+to&nbsp;the&nbsp;standard&nbsp;output.&nbsp;&nbsp;Non-positive&nbsp;value&nbsp;means&nbsp;no&nbsp;delay.</tt></dd>
+</dl>
+<dl><dt><strong>outfrq</strong></dt>
+<dd><tt>Output&nbsp;frequency,&nbsp;in&nbsp;iterations.&nbsp;&nbsp;This&nbsp;parameter&nbsp;specifies&nbsp;how<br>
+frequently&nbsp;the&nbsp;solver&nbsp;sends&nbsp;information&nbsp;about&nbsp;the&nbsp;solution&nbsp;to<br>
+the&nbsp;standard&nbsp;output.&nbsp;&nbsp;This&nbsp;must&nbsp;be&nbsp;positive.</tt></dd>
+</dl>
+<dl><dt><strong>presol</strong></dt>
+<dd><tt>Whether&nbsp;the&nbsp;simplex&nbsp;solver&nbsp;should&nbsp;use&nbsp;the&nbsp;LP&nbsp;presolver.</tt></dd>
+</dl>
+<dl><dt><strong>price</strong></dt>
+<dd><tt>Pricing&nbsp;option&nbsp;for&nbsp;primal&nbsp;and&nbsp;dual&nbsp;simplex.<br>
+0&nbsp;--&nbsp;textbook&nbsp;pricing<br>
+1&nbsp;--&nbsp;steepest&nbsp;edge&nbsp;pricing</tt></dd>
+</dl>
+<dl><dt><strong>relax</strong></dt>
+<dd><tt>Relaxation&nbsp;parameter&nbsp;used&nbsp;in&nbsp;the&nbsp;ratio&nbsp;test.&nbsp;&nbsp;If&nbsp;it&nbsp;is&nbsp;zero,&nbsp;the<br>
+textbook&nbsp;ratio&nbsp;test&nbsp;is&nbsp;used.&nbsp;&nbsp;If&nbsp;it&nbsp;is&nbsp;non-zero&nbsp;(should&nbsp;be<br>
+positive),&nbsp;Harris'&nbsp;two-pass&nbsp;ratio&nbsp;test&nbsp;is&nbsp;used.&nbsp;&nbsp;In&nbsp;the&nbsp;latter<br>
+case&nbsp;on&nbsp;the&nbsp;first&nbsp;pass&nbsp;of&nbsp;the&nbsp;ratio&nbsp;test&nbsp;basic&nbsp;variables&nbsp;(in&nbsp;the<br>
+case&nbsp;of&nbsp;primal&nbsp;simplex)&nbsp;or&nbsp;reduced&nbsp;costs&nbsp;of&nbsp;non-basic&nbsp;variables<br>
+(in&nbsp;the&nbsp;case&nbsp;of&nbsp;dual&nbsp;simplex)&nbsp;are&nbsp;allowed&nbsp;to&nbsp;slightly&nbsp;violate<br>
+their&nbsp;bounds,&nbsp;but&nbsp;not&nbsp;more&nbsp;than&nbsp;(relax*tolbnd)&nbsp;or&nbsp;(relax*toldj)<br>
+(thus,&nbsp;relax&nbsp;specifies&nbsp;the&nbsp;mixture&nbsp;of&nbsp;tolbnd&nbsp;or&nbsp;toldj).</tt></dd>
+</dl>
+<dl><dt><strong>round</strong></dt>
+<dd><tt>Whether&nbsp;to&nbsp;round&nbsp;tiny&nbsp;primal&nbsp;and&nbsp;dual&nbsp;values&nbsp;to&nbsp;exact&nbsp;zero.</tt></dd>
+</dl>
+<dl><dt><strong>scale</strong></dt>
+<dd><tt>Scaling&nbsp;used&nbsp;when&nbsp;the&nbsp;lp.scale()&nbsp;method&nbsp;is&nbsp;called.<br>
+0&nbsp;--&nbsp;no&nbsp;scaling<br>
+1&nbsp;--&nbsp;equilibration&nbsp;scaling<br>
+2&nbsp;--&nbsp;geometric&nbsp;mean&nbsp;scaling<br>
+3&nbsp;--&nbsp;geometric&nbsp;then&nbsp;equilibration&nbsp;scaling</tt></dd>
+</dl>
+<dl><dt><strong>tmlim</strong></dt>
+<dd><tt>Searching&nbsp;time&nbsp;limit,&nbsp;in&nbsp;seconds.&nbsp;&nbsp;If&nbsp;this&nbsp;value&nbsp;is&nbsp;positive,<br>
+it&nbsp;is&nbsp;decreased&nbsp;each&nbsp;time&nbsp;when&nbsp;one&nbsp;simplex&nbsp;iteration&nbsp;has&nbsp;been<br>
+performed&nbsp;by&nbsp;the&nbsp;amount&nbsp;of&nbsp;time&nbsp;spent&nbsp;for&nbsp;the&nbsp;iteration,&nbsp;and<br>
+reaching&nbsp;zero&nbsp;value&nbsp;signals&nbsp;the&nbsp;solver&nbsp;to&nbsp;stop&nbsp;the&nbsp;search.<br>
+Negative&nbsp;value&nbsp;means&nbsp;no&nbsp;time&nbsp;limit.</tt></dd>
+</dl>
+<dl><dt><strong>tolbnd</strong></dt>
+<dd><tt>Relative&nbsp;tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;the&nbsp;basic&nbsp;solution's&nbsp;primal<br>
+feasibility.&nbsp;&nbsp;(Do&nbsp;not&nbsp;change&nbsp;this&nbsp;parameter&nbsp;without&nbsp;detailed<br>
+understanding&nbsp;of&nbsp;its&nbsp;purpose.)</tt></dd>
+</dl>
+<dl><dt><strong>toldj</strong></dt>
+<dd><tt>Absolute&nbsp;tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;the&nbsp;basic&nbsp;solution's&nbsp;dual<br>
+feasibility.&nbsp;&nbsp;(Do&nbsp;not&nbsp;change&nbsp;this&nbsp;parameter&nbsp;without&nbsp;detailed<br>
+understanding&nbsp;of&nbsp;its&nbsp;purpose.)</tt></dd>
+</dl>
+<dl><dt><strong>tolint</strong></dt>
+<dd><tt>Absolute&nbsp;tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;if&nbsp;the&nbsp;current&nbsp;basic&nbsp;solution<br>
+is&nbsp;integer&nbsp;feasible.&nbsp;&nbsp;(Do&nbsp;not&nbsp;change&nbsp;this&nbsp;parameter&nbsp;without<br>
+detailed&nbsp;understanding&nbsp;of&nbsp;its&nbsp;purpose.)</tt></dd>
+</dl>
+<dl><dt><strong>tolobj</strong></dt>
+<dd><tt>Relative&nbsp;tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;if&nbsp;the&nbsp;value&nbsp;of&nbsp;the&nbsp;objective<br>
+function&nbsp;is&nbsp;not&nbsp;better&nbsp;than&nbsp;in&nbsp;the&nbsp;best&nbsp;known&nbsp;integer&nbsp;feasible<br>
+solution.&nbsp;&nbsp;(Do&nbsp;not&nbsp;change&nbsp;this&nbsp;parameter&nbsp;without&nbsp;detailed<br>
+understanding&nbsp;of&nbsp;its&nbsp;purpose.)</tt></dd>
+</dl>
+<dl><dt><strong>tolpiv</strong></dt>
+<dd><tt>Relative&nbsp;tolerance&nbsp;used&nbsp;to&nbsp;choose&nbsp;eligible&nbsp;pivotal&nbsp;elements&nbsp;of<br>
+the&nbsp;simplex&nbsp;table.&nbsp;&nbsp;(Do&nbsp;not&nbsp;change&nbsp;this&nbsp;parameter&nbsp;without<br>
+detailed&nbsp;understanding&nbsp;of&nbsp;its&nbsp;purpose.)</tt></dd>
+</dl>
+<dl><dt><strong>usecuts</strong></dt>
+<dd><tt>A&nbsp;bitstring&nbsp;representing&nbsp;what&nbsp;cuts&nbsp;should&nbsp;be&nbsp;used&nbsp;in&nbsp;the<br>
+intopt()&nbsp;solver.&nbsp;&nbsp;For&nbsp;a&nbsp;current&nbsp;value&nbsp;'val',&nbsp;the&nbsp;truth&nbsp;of<br>
+these&nbsp;indicates&nbsp;which&nbsp;cuts&nbsp;will&nbsp;be&nbsp;used&nbsp;(multiple&nbsp;cuts<br>
+may&nbsp;be&nbsp;used):<br>
+0x01&nbsp;&amp;&nbsp;val&nbsp;--&nbsp;mixed&nbsp;cover&nbsp;cuts<br>
+0x02&nbsp;&amp;&nbsp;val&nbsp;--&nbsp;clique&nbsp;cuts<br>
+0x04&nbsp;&amp;&nbsp;val&nbsp;--&nbsp;Gomory's&nbsp;mixed&nbsp;integer&nbsp;cuts<br>
+For&nbsp;example,&nbsp;0x07&nbsp;or&nbsp;0xFF&nbsp;or&nbsp;the&nbsp;like&nbsp;would&nbsp;use&nbsp;all&nbsp;cuts,<br>
+and&nbsp;0&nbsp;would&nbsp;mean&nbsp;no&nbsp;cuts&nbsp;will&nbsp;be&nbsp;used.</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>version</strong> = (4, 14)</td></tr></table>
+</body></html>

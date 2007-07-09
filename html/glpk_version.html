@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<link rel="stylesheet" href="style.css" />
+	<title>GLPK Version Specific Notes</title>
+<style>
+	
+</style></head>
+<body>
+
+<h1>GLPK Version Specific Notes</h1>
+
+<p>When building PyGLPK, certain functions will be disabled depending on what version of GLPK the build process believes it is using.  Below is a list of GLPK versions, and descriptions of what functionality will not work in earlier versions.  (Or, in some cases, later versions.)</p>
+
+<p>The examples use a hypothetical <code>glpk.LPX</code> instance named <code>lp</code> for illustrative purposes.</p>
+
+
+<h3>GLPK 4.15</h3>
+<ul>
+<li><strong>Removal</strong> of the ability to read and write GNU LP problem descriptions, <code>glpk.LPX(glp='filename')</code> and <code>lp.write(glp='filename')</code> (owing to removal of C routines <code>lpx_read_prob</code> and <code>lpx_write_prob</code>)</li>
+</ul>
+
+<h3>GLPK 4.13</h3>
+<ul>
+<li>The exact simplex solver, <code>lp.exact()</code> (owing to introduction of C routine <code>lpx_exact</code>)</li>
+</ul>
+
+<h3>GLPK 4.10</h3>
+<ul>
+<li>The Bixby basis routine, <code>lp.cpx_basis()</code> (owing to introduction of C routine <code>lpx_cpx_basis</code>)</li>
+</ul>
+
+<h3>GLPK 4.9</h3>
+<ul>
+<li>The advanced integer solver, <code>lp.intopt()</code> (owing to introduction of C routine <code>lpx_intopt</code>)</li>
+<li>The integer optimality condition checker, <code>lp.kktint()</code> (owing to introduction of C routine <code>lpx_check_int</code>)</li>
+</ul>
+
+<h3>GLPK 4.7</h3>
+<ul>
+<li>Indexing rows and columns by their names (owing to introduction of C routines <code>lpx_create_index</code>, <code>lpx_find_row</code>, <code>lpx_find_col</code>, and <code>lpx_delete_index</code>), though one can always name rows and columns</li>
+<li>The integer optimality condition checker, <code>lp.kktint()</code> (owing to introduction of C routine <code>lpx_check_int</code>)</li>
+<li>Ability to read and write free MPS problem descriptions, <code>glpk.LPX(freemps='filename')</code> and <code>lp.write(freemps='filename')</code> (owing to introduction of C routines <code>lpx_read_freemps</code> and <code>lpx_write_freemps</code>)</li>
+</ul>
+
+<h3>GLPK 4.6</h3>
+<ul>
+<li>Ability to read and write GNU LP problem descriptions, <code>glpk.LPX(glp='filename')</code> and <code>lp.write(glp='filename')</code> (owing to introduction of C routines <code>lpx_read_prob</code> and <code>lpx_write_prob</code>)</li>
+</ul>
+
+<h3>GLPK 4.4</h3>
+<ul>
+<li>At this point there was a major reorganization of GLPK.  Versions prior to GLPK 4.4 to are incompatible with PyGLPK.</li>
+</ul>
+
+<hr/>
+Thomas Finley, 2007
+</body>
+</html>

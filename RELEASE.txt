@@ -1,0 +1,24 @@
+                              PyGLPK Release Notes
+
+   Copyright (c) 2007, Thomas W. Finley
+
+PyGLPK 0.2
+
+     * Testing code is now more exhaustive, and with more testing of smaller
+       components rather than exclusively testing PyGLPK's ability to solve
+       full problems.
+     * Fixed freeing some Python objects too early: When assigning values to
+       the constraint matrix, matrix value reference counts were not
+       incremented correctly when using implicit indexing (i.e., when the
+       index of an entry was inferred from the previous entry) in matrix
+       assignments to both the entire matrix and individual rows/columns.
+     * The integer parameter outfrq was erroneously identified as being a
+       float parameter in code.
+
+PyGLPK 0.1
+
+     * First release.
+
+     ----------------------------------------------------------------------
+
+   Thomas Finley, 2007
