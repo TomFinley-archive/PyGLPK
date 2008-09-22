@@ -57,7 +57,6 @@ class GarbageCollectionTestCase(unittest.TestCase):
         reg(lp.cols).add(5)
         reg(lp.rows[0]).matrix = [1,2,3,4,5]
         reg(lp.rows[1]).name = 'second row'
-        reg(lp.params).msglev = 0
         for c in reg(iter(reg(lp.cols))):
             reg(c).bounds = 1,2
         n = reg(reg(lp.cols)[0]).name

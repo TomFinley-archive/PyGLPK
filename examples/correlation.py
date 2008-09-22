@@ -40,7 +40,7 @@ def correlation_clustering(similarity):
                 lp.rows[-1].matrix = (ij,-1), (ik, 1), (jk, 1)
     for row in lp.rows:                      # For each row.
         row.bounds = None, 1                 # Each row is <= 1.
-    lp.params.msglev = 0                     # Make it shut up.
+    glpk.env.term_on = False                 # Make it shut up.
     lp.simplex()                             # Run the optimization.
     labels = [[lp.cols[pair2index(i,j)].value for i in xrange(j)]
               for j in xrange(items)]
@@ -49,7 +49,6 @@ def correlation_clustering(similarity):
 def halfint_correlation_clustering(similarity):
     """Wacky MIP-based half-int constrained correlation clustering."""
     lp = glpk.LPX()                          # Define the linear program.
-    lp.kind = int                            # Set it as a MIP.
     items = len(similarity)                  # Get the number of items.
     lp.obj.maximize = True                   # Set as maximization.
     lp.cols.add((items*(items-1))/2)         # Each item pair has a var.
@@ -73,9 +72,9 @@ def halfint_correlation_clustering(similarity):
                 lp.rows[-1].matrix = (ij,-1), (ik, 1), (jk, 1)
     for row in lp.rows:                      # For each row.
         row.bounds = None, 2                 # Each row is <= 1.
-    lp.params.msglev = 0                     # Make it shut up.
+    glpk.env.term_on = False                 # Make it shut up.
     lp.simplex()                             # Find the basic solution.
-    lp.intopt()                              # Find the integer solution.
+    lp.integer()                             # Find the integer solution.
     labels = [[lp.cols[pair2index(i,j)].value/2 for i in xrange(j)]
               for j in xrange(items)]
     return lp.obj.value, labels

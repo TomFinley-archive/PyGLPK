@@ -45,7 +45,6 @@ for col in lp.cols:
 	col.bounds = 0.0, None
 	lp.obj[col.index] = 1.0
 del lp.cols[2,4,5]
-lp.params.msglev = 0
 </pre>
 </td><td>
 <pre class="py">
@@ -56,7 +55,6 @@ for cnum in xrange(lp.num_cols()):
 	lp.set_col_bounds(cnum, 0.0, None)
 	lp.set_obj_coef(cnum, 1.0)
 lp.del_cols([2,4,5])
-lp.set_param(glpk.MSGLEV, 0)
 </pre>
 </td></tr>
 </table>
@@ -78,6 +76,10 @@ lp.set_param(glpk.MSGLEV, 0)
 <p>In the comparative examples of parallel C and Python code, wherever possible and appropriate I sprinkle <code>+1</code> in the C code.  Of course, only a lunatic would really write code that way, but I do this to highlight this difference, and second, make it more obvious which portions of C and Python correspond to each other: it's far easier to see the relation between <code>[7, 3, 1, 8, 6]</code> and <code>[7+1, 3+1, 1+1, 8+1, 6+1]</code>, versus <code>[8, 4, 2, 9, 7]</code>.</p>
 
 <p>PyGLPK also honors Python's quirk of "negative indexing" used to count from the end of a sequence, e.g., where index -1 refers to the last item, -2 second to last item, and so forth.  This can be convenient.  For example, after adding a row, you can refer to this row by <code>lp.rows[-1]</code> rather than having to be aware of its absolute index.</p>
+
+<h3>Error Handling</h3>
+
+<p>The GLPK's approach to errors in arguments is deeply peculiar.  It writes an error message and terminate the process, in contrast with many APIs that instead set or return an error code which can be checked.  The PyGLPK takes the more Pythonic approach of throwing catchable exceptions for illegal arguments.  Unfortunately, to avoid the process being terminated, this requires that absolutely every argument be vetted, requiring that PyGLPK have the additional overhead of doing sometimes rather detailed checks of arguments (which are, of course, checked yet again when the GLPK has access to them).  It seems unlikely that GLPK's design will be improved in this area.</p>
 
 <h1>Simple Example</h1>
 
@@ -139,6 +141,6 @@ Z = 733.333; x0 = 33.3333; x1 = 66.6667; x2 = 0
 </pre>
 
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>

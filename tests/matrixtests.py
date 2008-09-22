@@ -319,3 +319,34 @@ class MatrixCoefficientTestCase(Runner, unittest.TestCase):
             ValueError, self.runner,
             'self.lp.cols[2].matrix = [(1,2), (2,3.1415), (1,4)]')
 
+class MatrixScalingTestCase(Runner, unittest.TestCase):
+    """Tests the scale and unscale functions."""
+    def setUp(self):
+        self.lp = LPX()
+        self.lp.rows.add(100)
+        self.lp.cols.add(100)
+        rgen = random.Random(0)
+        newmatrix = []
+        # This should be pretty poorly conditioned.
+        for row in self.lp.rows:
+            scale = rgen.uniform(0,1000)
+            newmatrix.extend(rgen.uniform(-scale, scale) for c in self.lp.cols)
+        self.lp.matrix = newmatrix
+
+    def testScaling(self):
+        """Tests default scaling with the LPX.scale method."""
+        self.lp.scale()
+
+    def testFlaggedScaling(self):
+        """Tests scaling with flags."""
+        # Parameterized scaling is only available as of GLPK 4.31.
+        if env.version > (4,31):
+            self.lp.scale(LPX.SF_EQ | LPX.SF_2N)
+
+    def testUnscaling(self):
+        """Tests the LPX.unscale method."""
+        self.lp.scale()
+        self.lp.unscale()
+        self.assertEqual(set([1.0]), set(r.scale for r in self.lp.rows) |
+                         set(c.scale for c in self.lp.cols))
+

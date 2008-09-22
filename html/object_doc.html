@@ -16,7 +16,7 @@
 <tr><td valign="top">
 <ul>
 <li><a href="#lp">Linear Program</a><ul>
-	<li><a href="#lp_create">Creating and Deleting Problems</a></li>
+	<li><a href="#lp_create">Creating, Erasing, and Deleting Problems</a></li>
 	<li><a href="#lp_name">Naming Problems</a></li>
 	<li><a href="#lp_matrix">Constraint Matrix</a></li>
 	<li><a href="#lp_nnz">Non-Zero Constraint Matrix Entries</a></li>
@@ -34,7 +34,6 @@
 	<li><a href="#obj_minmax">Minimize or Maximize</a></li>
 	<li><a href="#obj_coef">Objective Coefficients</a></li>
 	<li><a href="#obj_value">Objective Function Value</a></li></ul></li>
-</ul></td><td valign="top"><ul>
 <li><a href="#rc">Rows and Columns</a><ul>
 	<li><a href="#rc_add">Adding Rows and Columns</a></li>
 	<li><a href="#rc_num">Number of Rows and Columns</a></li>
@@ -44,18 +43,33 @@
 	<li><a href="#rc_matrix">Matrix Entries of Rows and Columns</a></li>
 	<li><a href="#rc_nnz">Number of Non-Zero Constraint Row and Column Entries</a></li>
 	<li><a href="#rc_delete">Deleting Rows and Columns</a></li>
+	<li><a href="#rc_scale">Row and Column Scaling Factors</a></li>
 	<li><a href="#rc_special">Special Attributes of Rows and Columns</a></li>
 	<li><a href="#rc_basis">Row and Column Basis Status</a></li>
-	<li><a href="#rc_mip">Column Variable Kind, Continuous or Integer</a></li>
+	<li><a href="#rc_mip">Column Variable Kind, Continuous, Integer, or Binary</a></li>
 	<li><a href="#rc_value">Row and Column Variable Values</a></li></ul></li>
+</ul></td><td valign="top"><ul>
+<li><a href="#tree">MIP Callbacks and Search Trees</a><ul>
+	<li><a href="#tree_callback">Callback Objects</a></li>
+	<li><a href="#tree_lp">Tree Linear Program</a></li>
+	<li><a href="#tree_change">Tree Methods for Affecting Search</a></li>
+	<li><a href="#tree_traverse">Tree Node Traversal</a></li>
+	<li><a href="#tree_size">Tree Size</a></li>
+	<li><a href="#tree_gap">Tree MIP Gap</a></li>
+	<li><a href="#tree_bound">Tree Node Bound</a></li></ul></li>
+<li><a href="#env">Environment</a><ul>
+	<li><a href="#env_version">Version</a></li>
+	<li><a href="#env_memory">Memory</a></li>
+	<li><a href="#env_term">Terminal Output</a></li></ul></li>
+<!-- 
 <li><a href="#params">Parameter Collection</a><ul>
 	<li><a href="#params_value">Parameter Values</a></li>
 	<li><a href="#params_reset">Resetting</a></li></ul></li>
+ -->
 <li><a href="#kkt">Karush-Kuhn-Tucker Conditions</a><ul>
 	<li><a href="#kkt_get">Retrieving KKT Objects</a></li></ul></li>
 <li><a href="#miscnotes">Miscellaneous Notes</a><ul>
 	<li><a href="#miscnotes_help">Help</a></li>
-	<li><a href="#miscnotes_version">Version</a></li>
 	</ul></li>
 </ul></td></tr></table>
 
@@ -80,30 +94,32 @@ total = sum(i*i for i in range(10))
 
 <p>The most basic object in PyGLPK is the LPX class, just as in the GLPK C API it is the LPX structure.  As a rule, it holds data and methods that are relevant to the linear problem as a whole.  Throughout the code in this document, the token <code>lp</code> refers to an LPX object.</p>
 
-<a name="lp_create"><h3>Creating and Deleting Problems</h3></a>
+<a name="lp_create"><h3>Creating, Erasing, and Deleting Problems</h3></a>
 
-<p>One may create the Python instance of an LPX problem with a constructor.  Note that one does not need to delete the LPX object, though it may be desirable to do so.</p>
-
-<p>If you have maintained objects which point back to the LPX object (e.g., rows, columns, objective function), the LPX cannot be deleted until these references are discarded.  The point is that <code>del lp</code> will not necessarily result in deallocation of the LPX structure.</p>
+<p>One may create the Python instance of an LPX problem with a constructor.  An LPX that has been modified can be restored to its original pristine state with a call to the <code>erase</code> method.  One may explicitly delete the object.  Note that one does not need to delete the LPX object as it should be automatically garbage collected, though it may be desirable to do so, just as it is sometimes desirable to free a Python object without waiting until it falls out of scope.</p>
 
 <pre class="c">
-lp = lpx_create_prob();
-lpx_delete_prob(lp);
+lp = glp_create_prob();
+glp_erase_prob(lp);
+glp_delete_prob(lp);
 </pre>
 
 <pre class="py">
 lp = glpk.LPX()
+lp.erase()
 del lp
 </pre>
+
+<p>If you have maintained objects which point back to the LPX object (e.g., rows, columns, objective function), the LPX can be deleted, but the underlying object shall not be freed until these references are discarded.  In other words, there is nothing special about deleting the object versus any other Python object.  The point is that <code>del lp</code> will not necessarily result in deallocation of the LPX structure.</p>
 
 <a name="lp_name"><h3>Naming Problems</h3></a>
 
 <p>One gets and sets the name for a problem by querying or assigning to the <code>name</code> attribute.  As with the C API, names are limited to 255 characters.  Unset names are <code>None</code>.  One unsets a name by assigning <code>None</code> or deleting the <code>name</code>.</p>
 
 <pre class="c">
-lpx_set_prob_name(lp, "some name");
-lpx_set_prob_name(lp, NULL);
-char *thename = lpx_get_prob_name(lp);
+glp_set_prob_name(lp, "some name");
+glp_set_prob_name(lp, NULL);
+char *thename = glp_get_prob_name(lp);
 </pre>
 
 <pre class="py">
@@ -149,7 +165,7 @@ thename = lp.name
 int    ia[] = {0+1, 0+1, 0+1,  1+1, 2+1, 1+1, 1+1, 2+1};
 int    ja[] = {0+1, 1+1, 2+1,  0+1, 0+1, 1+1, 2+1, 2+1};
 double ar[] = {1.0, 1.0, 1.0, 10.0, 2.0, 4.0, 5.0, 6.0}
-lpx_load_matrix(lp, sizeof(ia), ia, ja, ar);
+glp_load_matrix(lp, sizeof(ia), ia, ja, ar);
 </pre>
 
 <pre class="py">
@@ -170,7 +186,7 @@ lp.matrix = [ 1.0, 1.0, 1.0,
 <p>One gets the number of non-zero constraint matrix entries by querying the <code>nnz</code> integer attribute.</p>
 
 <pre class="c">
-int numnonzero = lpx_get_num_nz(lp);
+int numnonzero = glp_get_num_nz(lp);
 </pre>
 
 <pre class="py">
@@ -189,9 +205,9 @@ numnonzero = lp.nnz
 </ul>
 
 <pre class="c">
-lpx_std_basis(lp);
-lpx_adv_basis(lp);
-lpx_cpx_basis(lp);
+glp_std_basis(lp);
+glp_adv_basis(lp, 0);
+glp_cpx_basis(lp);
 lpx_read_basis(lp, "/path/to/file");
 </pre>
 
@@ -204,33 +220,39 @@ lp.read_basis("/path/to/file")
 
 <a name="lp_scale"><h3>Scaling</h3></a>
 
-<p>Prior to optimization, it is often help to scale your problem, in part to avoid numerical instability.  The method <code>scale</code> tells the linear program to transform the program into an alternate equivalent formulation with better numerical properties.  <strong>Note that this transformation is transparent to the user.</strong>  This is a matter of internal representation used to help the solver.</p>
+<p>Prior to optimization, it is often help to scale your problem, in part to avoid numerical instability.  The method <code>scale</code> tells the linear program to transform the program into an alternate equivalent formulation with better numerical properties.  <strong>Note that this transformation is transparent to the user.</strong>  This is a matter of internal representation used to help the solver.  This procedure obeys the following flags defined as integers in the LPX class, which can be ORed together to produce a combination of effects:</p>
 
-<p>By passing on an optional argument that evaluates to false, one can cancel any previous scaling.</p>
+<ul>
+<li><code>SF_GM</code>: perform geometric mean scaling</li>
+<li><code>SF_EQ</code>: perform equilibration scaling</li>
+<li><code>SF_2N</code>: round scale factors to the nearest power of two</li>
+<li><code>SF_SKIP</code>: skip scaling, if the problem is well scaled</li>
+<li><code>SF_AUTO</code>: choose scaling options automatically</li>
+</ul>
+
+<p>By using the <code>unscale</code> method, one can cancel any previous scaling.</p>
 
 <pre class="c">
-lpx_scale_prob(lp);
-lpx_unscale_prob(lp);
+glp_scale_prob(lp, GLP_SF_AUTO);
+glp_scale_prob(lp, GLP_SF_GM | GLP_SF_2N);
+glp_unscale_prob(lp);
 </pre>
 
 <pre class="py">
 lp.scale()
-lp.scale(False)
+lp.scale(LPX.SF_GM | LPX.SF_2N)
+lp.unscale()
 </pre>
 
 <a name="lp_mip"><h3>Problem Kind, Continuous or Mixed Integer</h3></a>
 
-<p>One gets and sets the kind of problem (the default linear program or mixed integer) by querying or assigning the attribute <code>kind</code>.  This will hold either <code>float</code> if this is a pure linear program (LP), or <code>int</code> if this is a mixed integer program (MIP).</p>
+<p>One gets the kind of problem (the default linear program or mixed integer) by querying the attribute <code>kind</code>.  This will hold either <code>float</code> if this is a pure linear program (LP), or <code>int</code> if this is a mixed integer program (MIP) by having any integer or binary column variables.  A linear program becomes a mixed integer program by having some of its columns <a href="#rc_mip">assigned to either <code>bin</code> or <code>int</code> kind</a>.</p>
 
 <pre class="c">
-lpx_set_class(lp, LPX_LP);
-lpx_set_class(lp, LPX_MIP);
 int thekind = lpx_get_class(lp);
 </pre>
 
 <pre class="py">
-lp.kind = float
-lp.kind = int
 thekind = lp.kind
 </pre>
 
@@ -239,8 +261,8 @@ thekind = lp.kind
 <p>One gets the number of integer and binary (i.e., integer with 0, 1 bounds) column variables by querying the <code>nint</code> and <code>nbin</code> integer attributes, respectively.  If this is not a mixed integer problem, these attributes always hold 0.</p>
 
 <pre class="c">
-int num_int = lpx_get_num_int(lp);
-int num_bin = lpx_get_num_bin(lp);
+int num_int = glp_get_num_int(lp);
+int num_bin = glp_get_num_bin(lp);
 </pre>
 
 <pre class="py">
@@ -262,11 +284,13 @@ num_bin = lp.nbin
 
 <p>Return values are either <code>None</code> if the solver terminated normally, or a string denoting one of several possible error messages.  See help for each method to review these possible return values.</p>
 
+<p>Some of these solver routines may accept additional keyword parameters to control the behavior of the underlying solver.  See help for each method to review possible control parameters and default values.</p>
+
 <pre class="c">
-lpx_simplex(lp);
+glp_simplex(lp, params);
 lpx_exact(lp);
 lpx_interior(lp);
-lpx_integer(lp);  <font class="comment">// These two may be applied only to MIP problems</font>
+glp_intopt(lp, params);  <font class="comment">// These two may be applied only to MIP problems</font>
 lpx_intopt(lp);
 </pre>
 
@@ -294,7 +318,7 @@ lp.intopt()
 </ul>
 
 <pre class="c">
-int stat = lpx_get_status(lp); <font class="comment">// or lpx_(ipt|mip)_status</font>
+int stat = glp_get_status(lp); <font class="comment">// or glp_(ipt|mip)_status</font>
 </pre>
 
 <pre class="py">
@@ -306,8 +330,8 @@ stat = lp.status
 <p>Additionally, if one has used the simplex solver, one can get the primal and dual status with the <code>status_primal</code> and <code>status_dual</code> attributes.</p>
 
 <pre class="c">
-int pstat = lpx_get_prim_stat(lp);
-int dstat = lpx_get_dual_stat(lp);
+int pstat = glp_get_prim_stat(lp);
+int dstat = glp_get_dual_stat(lp);
 </pre>
 
 <pre class="py">
@@ -425,9 +449,9 @@ lp.write(mip=filename)
 <p>Similar to how one names problems, one gets and sets the name for the objective function by querying or assigning to the <code>name</code> attribute.  As with the C API, names are limited to 255 characters.  Unset names are <code>None</code>.  One unsets a name by assigning <code>None</code> or deleting the <code>name</code>.</p>
 
 <pre class="c">
-lpx_set_obj_name(lp, "some name");
-lpx_set_obj_name(lp, NULL);
-char *thename = lpx_get_obj_name(lp);
+glp_set_obj_name(lp, "some name");
+glp_set_obj_name(lp, NULL);
+char *thename = glp_get_obj_name(lp);
 </pre>
 
 <pre class="py">
@@ -441,9 +465,9 @@ thename = lp.obj.name
 <p>One gets and sets whether this is a minimization or maximization problem by querying or assigning to the <code>maximize</code> boolean attribute.</p>
 
 <pre class="c">
-lpx_set_obj_dir(lp, LPX_MIN);
-lpx_set_obj_dir(lp, LPX_MAX);
-int ismax = (lpx_get_obj_dir(lp) == LPX_MAX);
+glp_set_obj_dir(lp, GLP_MIN);
+glp_set_obj_dir(lp, GLP_MAX);
+int ismax = (glp_get_obj_dir(lp) == GLP_MAX);
 </pre>
 
 <pre class="py">
@@ -463,14 +487,14 @@ ismax = lp.obj.maximize
 <p>The objective function's constant shift term can be accessed either by using <code>None</code> as an index, or by accessing the <code>shift</code> attribute, that is, <code>lp.obj.shift</code>.</p>
 
 <pre class="c">
-lpx_set_obj_coef(lp, 2+1, 3.0);
-for (i=0; i&lt;lpx_get_num_cols(lp); ++i)
-	lpx_set_obj_coef(lp, i+1, 1.0)
-lpx_set_obj_coef(lp, 0+1, 3.14159); lpx_set_obj_coef(lp, 2+1, -2.0);
-lpx_set_obj_coef(lp, 0, 0.5);
-lpx_set_obj_coef(lp, lpx_get_num_cols(lp), 25.0);
-double c = lpx_get_obj_coef(lp, 3+1);
-double c1 = lpx_get_obj_coef(lp, 1+1), c2 = lpx_get_obj_coef(lp, 2+1);
+glp_set_obj_coef(lp, 2+1, 3.0);
+for (i=0; i&lt;glp_get_num_cols(lp); ++i)
+	glp_set_obj_coef(lp, i+1, 1.0)
+glp_set_obj_coef(lp, 0+1, 3.14159); glp_set_obj_coef(lp, 2+1, -2.0);
+glp_set_obj_coef(lp, 0, 0.5);
+glp_set_obj_coef(lp, glp_get_num_cols(lp), 25.0);
+double c = glp_get_obj_coef(lp, 3+1);
+double c1 = glp_get_obj_coef(lp, 1+1), c2 = glp_get_obj_coef(lp, 2+1);
 </pre>
 
 <pre class="py">
@@ -488,7 +512,7 @@ c1, c2 = lp.obj[1,2]
 <p>One gets the value for the objective function by querying the <code>value</code> attribute.</p>
 
 <pre class="c">
-double oval = lpx_get_obj_val(lp); <font class="comment">// or lpx_(ipt|mip)_obj_val</font>
+double oval = glp_get_obj_val(lp); <font class="comment">// or glp_(ipt|mip)_obj_val</font>
 </pre>
 
 <pre class="py">
@@ -498,9 +522,9 @@ oval = lp.obj.value
 <p>Unlike the C API, PyGLPK remembers which solver was used last and retrieves the corresponding objective function value.  If for whatever reason you wish to retrieve an objective function from a solver type different from what you used last, you can force the issue by asking for <code>value_s</code> (for <code>simplex</code> and <code>exact</code>), or <code>value_i</code> (for <code>interior</code>), or <code>value_m</code> (for <code>integer</code> or <code>intopt</code>).</p>
 
 <pre class="c">
-double soval = lpx_get_obj_value(lp);
-double ioval = lpx_ipt_obj_value(lp);
-double moval = lpx_mip_obj_value(lp);
+double soval = glp_get_obj_value(lp);
+double ioval = glp_ipt_obj_value(lp);
+double moval = glp_mip_obj_value(lp);
 </pre>
 
 <pre class="py">
@@ -520,8 +544,8 @@ moval = lp.obj.value_m
 <p>To add rows or columns, call the <code>add</code> method on either the <code>row</code> or <code>column</code> subcontainer.  As in the C API, the newly created rows and columns are initially empty, and the return value of the <code>add</code> method holds the first newly valid index.</p>
 
 <pre class="c">
-int rnew = lpx_add_rows(lp, nrs);
-int cnew = lpx_add_cols(lp, ncs);
+int rnew = glp_add_rows(lp, nrs);
+int cnew = glp_add_cols(lp, ncs);
 </pre>
 
 <pre class="py">
@@ -534,8 +558,8 @@ cnew = lp.cols.add(ncs)
 <p>One gets the number of rows or columns by querying the length of the LP's <code>row</code> and <code>column</code> containers.</p>
 
 <pre class="c">
-int nrs = lpx_get_num_rows(lp);
-int ncs = lpx_get_num_cols(lp);
+int nrs = glp_get_num_rows(lp);
+int ncs = glp_get_num_cols(lp);
 </pre>
 
 <pre class="py">
@@ -553,7 +577,7 @@ ncs = len(lp.cols)
 <p>As we shall see, rows and columns can be named.  One may also index named rows and columns by their names.</p>
 
 <pre class="c">
-int rownum = lpx_find_row(lp, "rowname")
+int rownum = glp_find_row(lp, "rowname")
 </pre>
 <pre class="py">
 row = lp.rows["rowname"]
@@ -577,9 +601,9 @@ lp.rows[::2]         <font class="comment"># every row with an even index</font>
 
 <pre class="c">
 char buff[10];
-for (i=1; i<=lpx_get_num_cols(lp); ++i) {
+for (i=1; i<=glp_get_num_cols(lp); ++i) {
 	snprintf(buff, sizeof(buff), "x%d", i-1);
-	lpx_set_col_name(lp, i, buff);
+	glp_set_col_name(lp, i, buff);
 }
 </pre>
 
@@ -595,10 +619,10 @@ for col in lp.cols:
 <p>Note the use of an index into the <code>rows</code> or <code>cols</code> collections to retrieve a particular row or columns.  As with the C API, indices are integral, though we count from 0.</p>
 
 <pre class="c">
-lpx_set_row_name(lp, ri+1, "row name");
-lpx_set_col_name(lp, ci+1, "col name");
-char *rname = lpx_get_row_name(lp, ri+1);
-char *cname = lpx_get_col_name(lp, ci+1);
+glp_set_row_name(lp, ri+1, "row name");
+glp_set_col_name(lp, ci+1, "col name");
+char *rname = glp_get_row_name(lp, ri+1);
+char *cname = glp_get_col_name(lp, ci+1);
 </pre>
 
 <pre class="py">
@@ -624,11 +648,11 @@ therow = lp.rows["xi"]
 <p>In this code, we see instances of setting free (unbounded), lower, upper, double, and fixed (equality) bounds, respectively on a row and column.</p>
 
 <pre class="c">
-lpx_set_row_bnds(lp, ri+1, LPX_FR,  0,   0);
-lpx_set_row_bnds(lp, ri+1, LPX_LO,  2,   0);
-lpx_set_col_bnds(lp, ci+1, LPX_UP,  0,   5);
-lpx_set_col_bnds(lp, ci+1, LPX_DB, -1,   3.14159);
-lpx_set_row_bnds(lp, ri+1, LPX_FX,  3.4, 3.4);
+glp_set_row_bnds(lp, ri+1, GLP_FR,  0,   0);
+glp_set_row_bnds(lp, ri+1, GLP_LO,  2,   0);
+glp_set_col_bnds(lp, ci+1, GLP_UP,  0,   5);
+glp_set_col_bnds(lp, ci+1, GLP_DB, -1,   3.14159);
+glp_set_row_bnds(lp, ri+1, GLP_FX,  3.4, 3.4);
 </pre>
 
 <pre class="py">
@@ -646,7 +670,7 @@ lp.rows[ri].bounds = 3.4         <font class="comment"># Or, lp.rows[ri].bounds 
 
 <p>One gets and sets the entries of a row or column in the constraint matrix by querying or assigning the attribute <code>matrix</code>.  Assignments to <code>matrix</code> will remove previous entries.</p>
 
-<p>Retrieving <code>matrix</code> will yeild a list of two element tuples over the non-zero entries in this row or column, each of the form <code>(index, value)</code>.  The <code>index</code> is the index (counting from 0) of the entry holding value <code>value</code> in this row or column.</p>
+<p>Retrieving <code>matrix</code> will yield a list of two element tuples over the non-zero entries in this row or column, each of the form <code>(index, value)</code>.  The <code>index</code> is the index (counting from 0) of the entry holding value <code>value</code> in this row or column.</p>
 
 <p>If we have an LPX object with <var>r</var> rows and <var>c</var> columns, then valid indices for rows are 0 through <var>c</var>&minus;1, and valid entries for columns are 0 through <var>r</var>&minus;1.</p>
 
@@ -683,8 +707,8 @@ lp.rows[2].matrix = [10, -3.14159, (3, 0.5)]
 <p>One gets the number of non-zero constraint elements within a row or a column by querying the <code>nnz</code> integer attribute.</p>
 
 <pre class="c">
-int rnnz = lpx_get_mat_row(lp, ri+1, NULL, NULL);
-int cnnz = lpx_get_mat_col(lp, ci+1, NULL, NULL);
+int rnnz = glp_get_mat_row(lp, ri+1, NULL, NULL);
+int cnnz = glp_get_mat_col(lp, ci+1, NULL, NULL);
 </pre>
 
 <pre class="py">
@@ -698,11 +722,11 @@ cnnz = lp.col[ci].nnz
 
 <pre class="c">
 int indices1[] = { 2+1 };
-lpx_del_cols(lp, 1, indices1-1);
+glp_del_cols(lp, 1, indices1-1);
 int indices2[] = { 2+1,5+1,6+1 };
-lpx_del_rows(lp, 3, indices2-1);
+glp_del_rows(lp, 3, indices2-1);
 int indices3[] = { 3+1, 4+1, 5+1, 6+1 };
-lpx_del_cols(lp, 4, indices3-1);
+glp_del_cols(lp, 4, indices3-1);
 </pre>
 
 <pre class="py">
@@ -711,13 +735,32 @@ del lp.rows[2,5,6]   <font class="comment"># Remove rows indexed at 2,5,6</font>
 del lp.cols[3:7]     <font class="comment"># Remove cols indexed at 3,4,5,6</font>
 </pre>
 
+<a name="rc_scale"><h3>Row and Column Scaling Factors</h3></a>
+
+The constraint matrix <var>A</var> undergoes a linear transformation with diagonal positive matrices <var>R</var> and <var>S</var> (row and column scaling matrices, respectively) to come up with an implicit new constraint matrix <var>&Atilde;=RAS</var>.  The transformed matrix has entries <var>&atilde;<sub>ij</sub>=r<sub>ii</sub>a<sub>ij</sub>s<sub>jj</sub></var>.  Though most users may wish to set this <a href="#lp_scale">scaling automatically</a>, one may set and get the row and column scaling factors manually with the <code>scale</code> attribute.  Changing the scaling factor for row <var>i</var> or column <var>j</var> corresponds to changing element <var>r<sub>ii</sub></var> or <var>s<sub>jj</sub></var> in the diagonal scaling matrices, respectively.
+
+<pre class="c">
+glp_set_rii(lp, 2, 3.14159);
+glp_set_sjj(lp, 4, 2.0);
+double row3scale = glp_get_rii(lp, 3);
+double col3scale = glp_get_sjj(lp, 3);
+</pre>
+
+<pre class="py">
+lp.rows[2].scale = 3.14159
+lp.cols[4].scale = 2.0
+row3scale = lp.rows[3].scale
+col3scale = lp.cols[3].scale
+</pre>
+
+
 <a name="rc_special"><h3>Special Attributes of Rows and Columns</h3></a>
 
 <p>As is clear from the previous examples, row and column collections (e.g., as accessed by <code>lp.rows</code>) and rows and columns (e.g., as accessed by <code>lp.rows[i]</code>) as well as the rows and columns themselves are bona fide objects.  (This was a design choice: rather than having only the LPX class where one defines a hundred or so get and set methods, as the C API must, one retrieves the rows and columns and operates on them instead.)</p>
 
 <p>As a point of implementation, these row and column objects do not contain the row and column data.  In reality, they just contain a pointer back to the LPX and an index.  We shall see consequences of this in this subsection.</p>
 
-<p>Aside from attributes which have obvious analogies to functions in the C API (e.g., <code>name</code> with the <code>lpx_[gs]et_(row|col)_name</code> functions), rows and columns have other special attributes that do not have analogies in the C API which are exposed to Python users in the hope they may find them useful.</p>
+<p>Aside from attributes which have obvious analogies to functions in the C API (e.g., <code>name</code> with the <code>glp_[gs]et_(row|col)_name</code> functions), rows and columns have other special attributes that do not have analogies in the C API which are exposed to Python users in the hope they may find them useful.</p>
 
 <p><code>index</code> is an integer attribute containing the index of this row or column.</p>
 
@@ -751,7 +794,7 @@ assert row1.isrow
 </ul>
 
 <pre class="c">
-if (lpx_get_row_stat(lp, ri+1) == LPX_BS)
+if (glp_get_row_stat(lp, ri+1) == GLP_BS)
 	printf("row is basic\n");
 else
 	printf("row is non-basic\n");
@@ -770,19 +813,19 @@ else:
 int i, j, m, n, type;
 double lb, ub;
 <font class="comment">// all auxiliary variables are basic</font>
-m = lpx_get_num_rows(lp);
+m = glp_get_num_rows(lp);
 for (i = 1; i <= m; i++)
-	lpx_set_row_stat(lp, i, LPX_BS);
+	glp_set_row_stat(lp, i, GLP_BS);
 <font class="comment">// all structural variables are non-basic</font>
-n = lpx_get_num_cols(lp);
+n = glp_get_num_cols(lp);
 for (j = 1; j <= n; j++) {
-	type = lpx_get_col_type(lp, j);
-	lb = lpx_get_col_lb(lp, j);
-	ub = lpx_get_col_ub(lp, j);
-	if (type != LPX_DB || fabs(lb) <= fabs(ub))
-		lpx_set_col_stat(lp, j, LPX_NL);
+	type = glp_get_col_type(lp, j);
+	lb = glp_get_col_lb(lp, j);
+	ub = glp_get_col_ub(lp, j);
+	if (type != GLP_DB || fabs(lb) <= fabs(ub))
+		glp_set_col_stat(lp, j, GLP_NL);
 	else
-		lpx_set_col_stat(lp, j, LPX_NU);
+		glp_set_col_stat(lp, j, GLP_NU);
 }
 </pre>
 
@@ -799,23 +842,25 @@ for col in lp.cols:
 		col.status = "nu"
 </pre>
 
-<a name="rc_mip"><h3>Column Variable Kind, Continuous or Integer</h3></a>
+<a name="rc_mip"><h3>Column Variable Kind, Continuous, Integer, or Binary</h3></a>
 
-<p>One gets and sets the kind of variable (the default continuous, or integer) by querying or assigning the attribute <code>kind</code>.  This will hold either <code>float</code> if this is a continuous variable, or <code>int</code> if this is an integer variable.</p>
+<p>One gets and sets the kind of variable (the default continuous, or integer) by querying or assigning the attribute <code>kind</code>.  This will hold either <code>float</code> if this is a continuous variable, <code>int</code> if this is an integer variable, or <code>bool</code> if this is a binary variable.</p>
 
 <pre class="c">
-lpx_set_col_kind(lp, ci+1, LPX_CV);
-lpx_set_col_kind(lp, ci+1, LPX_IV);
-int kind = lpx_get_col_kind(lp, ci+1);
+glp_set_col_kind(lp, ci+1, GLP_CV);
+glp_set_col_kind(lp, ci+1, GLP_IV);
+glp_set_col_kind(lp, ci+1, GLP_BV);
+int kind = glp_get_col_kind(lp, ci+1);
 </pre>
 
 <pre class="py">
 lp.cols[ci].kind = float
 lp.cols[ci].kind = int
+lp.cols[ci].kind = bool
 kind = lp.cols[ci].kind
 </pre>
 
-<p>Note that setting a column variable as integer requires that the <code>lp</code> be a MIP problem, i.e., <code>lp.kind==int</code>.  In the event that <code>lp.kind==float</code>, all variable assignments to kind <code>int</code> will fail, and all variables will return <code>float</code> when asked their kind.</p>
+<p>Note that PyGLPK and GLPK do not make any distinction between setting a column as binary, versus setting the column as integral with [0, 1] bounds.</p>
 
 <p>Another note, rows must be continuous.  As a matter of implementation, because they are the same type of object as columns, they may also be queried and assigned to in this fashion.  However, their <code>kind</code> attribute always returns and only accepts <code>float</code>.</p>
 
@@ -824,8 +869,8 @@ kind = lp.cols[ci].kind
 <p>One gets a row or column's variable value by querying the <code>primal</code>, <code>dual</code>, or <code>value</code> attribute.</p>
 
 <pre class="c">
-double pval = lpx_get_row_prim(ri+1); <font class="comment">// if simplex</font>
-double dval = lpx_get_col_dual(ci+1);
+double pval = glp_get_row_prim(ri+1); <font class="comment">// if simplex</font>
+double dval = glp_get_col_dual(ci+1);
 </pre>
 
 <pre class="py">
@@ -833,21 +878,21 @@ pval = lp.rows[ri].primal
 dval = lp.cols[ci].dual
 </pre>
 
-<p>The two attributes <code>primal</code> and <code>value</code> are interchangable.  The term value is used to refer to the solutions of the MIP since it only has one type of value (no dual).  However, since it is the same type of value (loosely speaking), this "link" between the two was established.</p>
+<p>The two attributes <code>primal</code> and <code>value</code> are interchangeable.  The term value is used to refer to the solutions of the MIP since it only has one type of value (no dual).  However, since it is the same type of value (loosely speaking), this "link" between the two was established.</p>
 
 <p>Note that unlike the C API, this remembers which solver was used last and retrieves the appropriate corresponding variable value.  If for whatever reason you wish to retrieve a variable function from a solver type different from what you used last (e.g., reviewing the relaxed basic solution after calling <code>integer()</code>), you can ask for <code>primal_s</code> or <code>dual_s</code> (for primals and duals from <code>simplex</code> and <code>exact</code>), or <code>primal_i</code> or <code>dual_i</code> (for primals and duals from <code>interior</code>), or <code>value_m</code> (for values from <code>integer</code> or <code>intopt</code>).</p>
 
 <pre class="c">
-double prim_sim_row = lpx_get_row_prim(lp, ri+1);
-double prim_sim_col = lpx_get_col_prim(lp, ci+1);
-double dual_sim_row = lpx_get_row_dual(lp, ri+1);
-double dual_sim_col = lpx_get_col_dual(lp, ci+1);
-double prim_ipt_row = lpx_ipt_row_prim(lp, ri+1);
-double prim_ipt_col = lpx_ipt_col_prim(lp, ci+1);
-double dual_ipt_row = lpx_ipt_row_dual(lp, ri+1);
-double dual_ipt_col = lpx_ipt_col_dual(lp, ci+1);
-double valu_mip_row = lpx_mip_row_val (lp, ri+1);
-double valu_mip_col = lpx_mip_col_val (lp, ci+1);
+double prim_sim_row = glp_get_row_prim(lp, ri+1);
+double prim_sim_col = glp_get_col_prim(lp, ci+1);
+double dual_sim_row = glp_get_row_dual(lp, ri+1);
+double dual_sim_col = glp_get_col_dual(lp, ci+1);
+double prim_ipt_row = glp_ipt_row_prim(lp, ri+1);
+double prim_ipt_col = glp_ipt_col_prim(lp, ci+1);
+double dual_ipt_row = glp_ipt_row_dual(lp, ri+1);
+double dual_ipt_col = glp_ipt_col_dual(lp, ci+1);
+double valu_mip_row = glp_mip_row_val (lp, ri+1);
+double valu_mip_col = glp_mip_col_val (lp, ci+1);
 </pre>
 
 <pre class="py">
@@ -858,6 +903,338 @@ dual_ipt_row, dual_ipt_col = lp.rows[ri].dual_i,   lp.cols[ci].dual_i
 valu_mip_row, valu_mip_col = lp.rows[ri].value_m,  lp.cols[ci].value_m
 </pre>
 
+<a name="tree"><h2>MIP Callbacks and Search Trees</h2></a>
+
+<p>In this section we describe the MIP solver callback interface, and the <code>Tree</code> and <code>TreeNode</code> objects supporting this interface for affecting the MIP solver.</p>
+
+<a name="tree_callback"><h3>Callback Objects</h3></a>
+
+<p>One of the more esoteric parts of the GLPK mixed integer programming solver is the use of callbacks to let the user code affect the flow of the search process.  Within PyGLPK, one can define a callback object which will be invoked at various parts of the algorithm, through the use of the optional <code>callback</code> keyword parameter to the MIP solver, whose argument we will term <code>cb</code>:
+
+<pre class="py">
+lp.integer(callback=cb)
+</pre>
+
+<p>What this <code>cb</code> callback object is is not strictly defined, but this object <code>cb</code> should respond to calls of the form <code>cb.<i>method</i>(tree)</code>, where <code><i>method</i></code> is one of <code>select</code>, <code>prepro</code>, <code>rowgen</code>, <code>heur</code>, <code>cutgen</code>, <code>branch</code>, or <code>bingo</code>.  These different methods represent the MIP solver seeking the callback object's input at various phases of the input.  (If a method does not exist, PyGLPK will try the <code>default</code> method instead, and if that does not exist, it will ignore the callback for that method.)</p>
+
+<p>The <code>tree</code> argument to these methods is a <code>Tree</code> instance, a representation of the search tree of the method.  The Tree instance contains data about the problem being solved.</p>
+
+<pre class="c">
+void callback_func(glp_tree *tree, void *info) {
+    switch (glp_ios_reason(tree)) {
+    case GLP_ISELECT: // some code to select subproblems here...
+    case GLP_IPREPRO: // some code for preprocessing here...
+    case GLP_IROWGEN: // some code for providing constraints here...
+    case GLP_IHEUR:   // some code for providing heuristic solutions here...
+    case GLP_ICUTGEN: // some code for providing constraints here...
+    case GLP_IBRANCH: // some code to choose a variable to branch on here...
+    case GLP_IBINGO:  // some code to monitor the situation here...
+    }
+}
+...
+glp_iocp parm;
+glp_init_iocp(&parm);
+parm.cb_func = callback_func;
+glp_intopt(lp, &parm);
+</pre>
+
+<pre class="py">
+class Callback:
+    def select(self, tree):
+        # some code to select subproblems here...
+    def prepro(self, tree):
+        # some code for preprocessing here...
+    def rowgen(self, tree):
+        # some code for providing constraints here...
+    def heur(self, tree):
+        # some code for providing heuristic solutions here...
+    def cutgen(self, tree):
+        # some code for providing constraints here...
+    def branch(self, tree):
+        # some code to choose a variable to branch on here...
+    def bingo(self, tree):
+        # some code to monitor the situation here...
+
+lp.integer(callback=Callback())
+</pre>
+
+<p>The <code>Tree</code> instance passed along to the function contains active subproblems being searched, where each subproblem corresponds to a <code>TreeNode</code> instance.</p>
+
+<p>Each of these seven phases of GLPK's implementation of the branch and cut algorithm correspond to these seven methods.  By calling a particular method, the GLPK indicates that it desires some sort of input from the user.  While a full description of the branch and cut algorithm is beyond the scope of this document (see the "Branch-and-cut interface routines" section of the "GNU Linear Programming Kit Reference Manual" that came with you GLPK distribution), and unfortunately a full understanding of what to do in each instance is beyond this author, we briefly describe the phases here, and what may be helpful in each instance to do what GLPK wants us to do.</p>
+
+<p>Note that all operations are optional.  One does not need to implement each method, and it is fine for a method to not do what is being requested: even just having a <code>pass</code> statement in a method is fine.  The GLPK has default behavior for all of the methods in case the user does not choose to affect the solution process.</p>
+
+<dl>
+<dt><code>select</code>, request for subproblem selection</dt>
+<dd>There is no current node, so set one of the active subproblems as the current node with the <code>tree.select</code> method.  The default behavior of the GLPK is to select the node with the best local bound, equivalent to this:
+<pre class="py">
+def select(self, tree):
+    tree.select(tree.best_node)
+</pre>
+</dd>
+<dt><code>prepro</code>, request for preprocessing</dt>
+<dd>The GLPK manual suggests that one may take advantage of this to perform preprocessing, perhaps of the form of tightening or loosening bounds of some variables, through modification of the <code>tree.lp</code> program object.</dd>
+<dt><code>rowgen</code>, request for row generation</dt>
+<dd>When the current subproblem has been solved to optimality and the LP relaxation has been solved with a solution better than the best known integer feasible solution, this procedure may be called upon to add "lazy" constraints to the <code>tree.lp</code>, which is done as one normally adds rows (<code>tree.lp.rows.add(...)</code>, and so on).</dd>
+<dt><code>heur</code>, request for a heuristic solution</dt>
+<dd>When the current subproblem being solved to optimality is integer infeasible (i.e., some integer problems are fractional), though with a better objective value than the best known integer solution, one may call <code>tree.heuristic(newsol)</code> where <code>newsol</code> is some iterable object (like a list, or an iterator) which can yield at least <code>len(tree.lp.cols)</code> float values (with integral values for integral columns), to serve as the new primal values.  (The method will check to see if it is better.)  Note that feasibility of this solution is not checked by the method, so use caution.</dd>
+<dt><code>cutgen</code>, request for cut generation</dt>
+<dd>Similar to <code>rowgen</code>, called when the subproblem being solved is integer infeasible but better than the best known integer solution, with the intent being that one adds constraints to cut off the current solution.</dd>
+<dt><code>branch</code>, request for branching</dt>
+<dd>In the case of integer infeasibility, we have some integer variable (e.g., column) with non-integer value <var>V</var>.  Branching is the process of splitting this process by adding two subproblems to the active list with the column's value set to &#x23A3;<var>V</var>&#x23A6; and &#x23A1;<var>V</var>&#x23A4;.  For some column index <code>j</code>, which we have confirmed we can branch upon with the <code>tree.can_branch</code> method, we call the <code>tree.branch</code> method with that index to add the two corresponding subproblems.
+<pre class="py">
+def branch(self, tree):
+    <font class="comment"># Find the first fractional integer variable, and branch on it</font>
+    for j in xrange(len(tree.lp.cols)):
+        if tree.can_branch(j):
+            tree.branch(j)
+            break
+</pre></dd>
+<dt><code>bingo</code>, better integer solution found</dt>
+<dd>When the LP relaxation finds an integer feasible solution, this method is called.  This is intended only for informational purposes, and should not modify any problem data.</dd>
+</dl>
+
+<a name="tree_lp"><h3>Tree Linear Program</h3></a>
+
+<p>One may retrieve the <code>LPX</code> problem object used by the MIP solver with the <code>lp</code> member, i.e., <code>tree.lp</code>.  This object is not necessarily the same <code>LPX</code> instance as that for which we called <code>lp.integer()</code> if some preprocessing was performed by the MIP solver.</p>
+
+<p>Modification of the underlying LPX object is an important part of the callback procedures, especially in the <code>rowgen</code>, <code>cutgen</code>, and <code>prepro</code> methods.  It is important to note that not all operations you may perform on LPX objects within this callback are necessarily safe: modifying the problem object out from under the procedure in the middle of optimization might cause problems.  However, it is difficult to distinguish a "problematic" change versus one which is helpful for, say, preprocessing, or computing cuts, or what have you.</p>
+
+<p>In order to aid ease of use, the PyGLPK implements "generic" solution retrieval methods.  For instance, an LP potentially has multiple objective function values: one for the last simplex solution <code>lp.obj.value_s</code>, one for the last interior point solution <code>lp.obj.value_i</code>, and one for the last MIP solution <code>lp.obj.value_m</code>.  However, there is also a <code>lp.obj.value</code>, which sensibly supposes that a user is interested in the solution the solver (which covers the vast majority of use cases).  However, in the midst of integer solution, the MIP solver hasn't yet become the "last" solver, so be sure to be explicit when retrieving values of columns and objective function values.</p>
+
+<pre class="c">
+glp_prob *lp = glp_ios_get_prob(tree);
+</pre>
+
+<pre class="py">
+lp = tree.lp
+</pre>
+
+<a name="tree_change"><h3>Tree Methods for Affecting Search</h3></a>
+
+<p>The <code>Tree</code> instance has many methods that allow one to affect the search process, as described earlier: <code>can_branch</code> and <code>branch_upon</code> to choose a column to set as integer, <code>heuristic</code> to set a new integer feasible solution, <code>select</code> to select an active subproblem for expansion, and <code>terminate</code> to just terminate the solution outright.</p>
+
+<pre class="c">
+glp_ios_can_branch(tree, 5+1);
+glp_ios_branch_upon(tree, 5+1, 'D');
+double *values;
+glp_ios_heur_sol(tree, values)
+glp_ios_select_node(tree, node_num);
+glp_ios_terminate(tree);
+</pre>
+
+<pre class="py">
+tree.can_branch(5)
+tree.branch_upon(5, 'D')
+tree.heuristic(values)
+tree.select(node)
+tree.terminate()
+</pre>
+
+<a name="tree_traverse"><h3>Tree Node Traversal</h3></a>
+
+<p>The tree instance contains an active subproblem list, corresponding to current entries in the search tree which have not yet been explored.  The tree contains several members that let one access the tree nodes, corresponding to subproblems in the list:</p>
+
+<ul>
+<li><code>curr_node</code>, the current active subproblem's node, which will be <code>None</code> in the selection phase when there is no current subproblem.</li>
+<li><code>first_node</code>, the first node in the active subproblem list.</li>
+<li><code>last_node</code>, the last node in the active subproblem list.</li>
+<li><code>best_node</code>, the node whose active subproblem has the best local bound.</li>
+</ul>
+
+<p>For instance:</p>
+
+<pre class="c">
+int node_num;
+node_num = glp_ios_curr_node(tree);
+node_num = glp_ios_next_node(tree, 0);
+node_num = glp_ios_prev_node(tree, 0);
+node_num = glp_ios_best_node(tree);
+</pre>
+
+<pre class="py">
+node = tree.curr_node
+node = tree.first_node
+node = tree.last_node
+node = tree.best_node
+</pre>
+
+<p>One may also iterate over <code>tree</code> to get all of the nodes in the active list.</p>
+
+<p>In addition to <code>Tree</code> members, each <code>TreeNode</code> has members to connect them to other <code>TreeNode</code> objects in the tree.</p>
+
+<ul>
+<li><code>next</code>, which gets the next active subproblem's node, or <code>None</code> if this is the last active node or an inactive node.</li>
+<li><code>prev</code>, which gets the previous active subproblem's node, or <code>None</code> if this is the first active node or an inactive node.</li>
+<li><code>up</code>, which gets the parent node that generated this node, or <code>None</code> if this is the root node.</li>
+<li><code>level</code>, which is this node's distance from the root, <code>0</code> if this is the root node</li>
+<li><code>subproblem</code>, which is the integral subproblem number, assigned in order from 1 onwards.</li>
+</ul>
+
+<pre class="c">
+int other_node_num, lev;
+other_node_num = glp_ios_next_node(tree, node_num);
+other_node_num = glp_ios_prev_node(tree, node_num);
+other_node_num = glp_ios_up_node(tree, node_num);
+lev = glp_ios_node_level(tree, node_num);
+<font class="comment">// node_num is the subproblem id number</font>
+</pre>
+
+<pre class="py">
+other_node = node.next
+other_node = node.prev
+other_node = node.up
+other_node = node.level
+subproblem_num = node.subproblem
+</pre>
+
+<a name="tree_size"><h3>Tree Size</h3></a>
+
+<p>One may get the tree size through the use of various members.</p>
+
+<ul>
+<li><code>num_active</code>, the number of active nodes.</li>
+<li><code>num_all</code>, the number of active and inactive nodes in the tree.</li>
+<li><code>num_total</code>, the number of nodes which were generated, active, inactive, and those nodes which have already been removed.</li>
+</ul>
+
+<pre class="c">
+int count;
+glp_ios_tree_size(tree, &count, NULL, NULL);
+glp_ios_tree_size(tree, NULL, &count, NULL);
+glp_ios_tree_size(tree, NULL, NULL, &count);
+</pre>
+
+<pre class="py">
+count = tree.num_active
+count = tree.num_all
+count = tree.num_total
+</pre>
+
+<a name="tree_gap"><h3>Tree MIP Gap</h3></a>
+
+<p>One may get the current relative gap between the integer and relaxed solution with the <code>gap</code> member.</p>
+
+<pre class="c">
+double gap = glp_ios_mip_gap(tree);
+</pre>
+
+<pre class="py">
+gap = tree.gap
+</pre>
+
+<a name="tree_bound"><h3>Tree Node Bound</h3></a>
+
+<p>One may get the lower (in minimization) or upper (in maximization) bound on the integer optimal solution to a node's subproblem with the <code>bound</code> member of a <code>TreeNode</code> instance.</p>
+
+<pre class="c">
+double bound = glp_ios_node_bound(tree, node_num);
+</pre>
+
+<pre class="py">
+bound = node.bound
+</pre>
+
+<a name="tree_reason"><h3>Tree Callback Reason</h3></a>
+
+<p>The <code>Tree</code> member <code>reason</code> holds a string indicating the reason why the callback was invoked.  While the reason for the callback is the same as the method name called in the callback (e.g., <code>select</code> is called only if <code>tree.reason='select'</code>), if one implements the <code>default</code> method in lieu of specific methods, one may wish to extract the reason with this member.</p>
+
+<pre class="c">
+int reasoncode = glp_ios_reason(tree);
+</pre>
+
+<pre class="py">
+reason = tree.reason
+</pre>
+
+<a name="env"><h2>Environment</h2></a>
+
+<p>Contained within <code>glpk.env</code> object is an <code>Environment</code> instance, through which one controls the global behavior of the GLPK routines.</p>
+
+<a name="env_version"><h3>Version</h3></a>
+
+<p>In the environment is a tuple <code>version</code> that reflects the version of GLPK that the build process believed it was linking against at compilation time.  For example, if the module believed it was linking against GLPK 4.31, the tuple would be <code>(4, 31)</code>.</p>
+
+<pre class="c">
+printf("GLPK version is %s\n", glp_version());
+</pre>
+
+<pre class="py">
+print 'GLPK version is %d.%d\n' % glpk.env.version
+</pre>
+
+<a name="env_memory"><h3>Memory</h3></a>
+
+<p>The GLPK monitors its own memory use, and this information can be retrieved from these members of the <code>glpk.env</code> object.  The <code>blocks</code> member holds the current number of allocated memory blocks, while <code>blocks_peak</code> holds the maximum this ever reached.  The <code>bytes</code> and <code>bytes_peak</code> members are similar, except for bytes.  Note that blocks are not a particular size, but are multiple </p>
+
+<pre class="c">
+int blocks, blocks_peak;
+glp_long bytes, bytes_peak;
+glp_mem_usage(&blocks, &blocks_peak, &bytes, &bytes_peak);
+</pre>
+
+<pre class="py">
+blocks = glpk.env.blocks
+blocks_peak = glpk.env.blocks_peak
+bytes = glpk.env.bytes
+bytes_peak = glpk.env.bytes_peak
+</pre>
+
+<p>One may also set the maximum number of megabytes with the <code>mem_limit</code> member.</p>
+
+<pre class="c">
+glp_mem_limit(50);
+</pre>
+
+<pre class="py">
+glpk.env.mem_limit = 50
+</pre>
+
+<a name="env_term"><h3>Terminal Output</h3></a>
+
+<p>The GLPK has many functions that produce output.  The user may at their option turn off or on the output by setting the environment's <code>term_on</code> attribute to <code>False</code> or <code>True</code>.</p>
+
+<pre class="c">
+glp_term_out(GLP_OFF);
+glp_term_out(GLP_ON);
+</pre>
+
+<pre class="py">
+glpk.env.term_on = False
+glpk.env.term_on = True
+</pre>
+
+<p>In addition to turning it on and off, one may enable more fine grained control by intercepting all terminal output with a function hook.  The function will be called with a single string argument whenever the GLPK chooses to print something.  Note that this will intercept only that output which is produced by the GLPK itself -- other output from Python will be completely unaffected.</p>
+
+<pre class="c">
+int term_hook(void *info, const char *output) {
+    FILE *logfile = (FILE *)info;
+    fputs(output, logfile);
+    return 1;
+}
+...
+FILE *lf = fopen("glpk_logfile.txt", "w");
+glp_term_hook(term_hook, (void*)lf);
+</pre>
+
+<pre class="py">
+logfile = file('glpk_logfile.txt', 'w')
+def term_hook(output):
+    file.write(output)
+glpk.env.term_hook = term_hook
+</pre>
+
+<p>One may remove the terminal hook function (e.g., resume default terminal output) by assigning the value <code>None</code>.</p>
+
+<pre class="c">
+glp_term_hook(NULL, NULL);
+</pre>
+
+<pre class="py">
+glpk.env.term_hook = None
+</pre>
+
+<!-- 
 <a name="params"><h2>Parameter Collection</h2></a>
 
 <p>Contained with a linear program object <code>lp</code> is a parameter object <code>param</code>.  This helps control the behavior of the GLPK.</p>
@@ -889,6 +1266,7 @@ lpx_reset_parms(lp);
 <pre class="py">
 lp.params.reset()
 </pre>
+ -->
 
 <a name="kkt"><h2>Karush-Kuhn-Tucker Conditions</h2></a>
 
@@ -922,15 +1300,7 @@ ikkt = lp.kktint()  <font class="comment"># integer conditions</font>
 help(glpk)
 </pre>
 
-<a name="miscnotes_version"><h3>Version</h3></a>
-
-<p>The module defines a tuple that reflects the version of GLPK that the build process believed it was linking against.  For example, if the module believed it was linking against GLPK 4.15, the tuple would be <code>(4, 15)</code> .</p>
-
-<pre class="py">
-glpk.version
-</pre>
-
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>

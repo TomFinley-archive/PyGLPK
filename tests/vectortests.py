@@ -55,7 +55,7 @@ class IndexVectorTestCase(Runner):
 
     def testEmptySingleStringLookup(self):
         """Tests string indexing of an empty vector collection."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         def f(key): self.vc[key]
         self.assertRaises(KeyError, f, "foo")
 
@@ -66,7 +66,7 @@ class IndexVectorTestCase(Runner):
 
     def testEmptyTupleStringLookup(self):
         """Tests string-tuple indexing of an empty vector collection."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         def f(): self.vc["foo", "bar"]
         self.assertRaises(KeyError, f)
 
@@ -120,7 +120,7 @@ class IndexVectorTestCase(Runner):
 
     def testStringIndexingOfSingleVector(self):
         """Tests indexing a single vector with a string."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         self.vc.add(5)
         self.vc[2].name = 'foo'
         self.assertEqual(self.vc['foo'].index, 2)
@@ -128,7 +128,7 @@ class IndexVectorTestCase(Runner):
 
     def testStringMembershipCheck(self):
         """Tests the 'in' operator for string indices."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         self.vc.add(5)
         self.failIf('foo' in self.vc)
         self.vc[2].name = 'foo'
@@ -137,7 +137,7 @@ class IndexVectorTestCase(Runner):
 
     def testStringTupleIndexingOfMultipleVector(self):
         """Tests indexing multiple vectors with a string tuple."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         self.vc.add(5)
         self.vc[2].name = 'foo'
         self.vc[4].name = 'bar'
@@ -149,7 +149,7 @@ class IndexVectorTestCase(Runner):
 
     def testStringNameReset(self):
         """Test that a name is no longer a valid index once set/reset."""
-        if version < (4,7): return
+        if env.version < (4,7): return
         self.vc.add(5)
         self.vc[2].name = 'foo'
         self.assertEqual(self.vc['foo'].name, 'foo')
@@ -199,7 +199,7 @@ class IndexVectorTestCase(Runner):
         for vec in self.vc:
             self.assertEqual(vec.name, 'x%d' % vec.index)
         self.assertEqual(self.vc[3].name, 'x3')
-        if version >= (4,7):
+        if env.version >= (4,7):
             self.assertEqual(self.vc['x10'].index, 10)
 
 class DeleteVectorTestCase(Runner):
@@ -215,7 +215,7 @@ class DeleteVectorTestCase(Runner):
         del self.vc[3]
         self.assertEqual(len(self.vc), self.num_vecs-1)
         self.assertEqual(self.vc[3].name, 'x4')
-        if version < (4, 7): return
+        if env.version < (4, 7): return
         self.failUnless('x3' not in self.vc)
 
     def testDeleteTupleVectorDecreasesLength(self):
@@ -230,7 +230,7 @@ class DeleteVectorTestCase(Runner):
         del self.vc[:2]
         self.assertEqual(len(self.vc), self.num_vecs-2)
         self.assertEqual([v.name for v in self.vc], ['x2', 'x3', 'x4'])
-        if version >= (4, 7):
+        if env.version >= (4, 7):
             self.failUnless('x0' not in self.vc)
             self.failUnless('x1' not in self.vc)
         del self.vc[:]
@@ -242,9 +242,19 @@ class DeleteVectorTestCase(Runner):
         self.assertEqual(len(self.vc), self.num_vecs / 2)
         self.assertEqual([v.name for v in self.vc],
                          ['x%d'%i for i in xrange(1, self.num_vecs, 2)])
-        if version >= (4, 7):
+        if env.version >= (4, 7):
             for i in xrange(0, self.num_vecs, 2):
                 self.failUnless(('x%d'%i) not in self.vc)
+
+    def testDeleteVectorInvalidation(self):
+        """Tests Bar invalidation once its index becomes out of bounds."""
+        self.thebar = self.vc[-1]
+        self.thebar.name # This should have no problems.
+        del self.vc[::2]
+        self.assertRaises(RuntimeError, self.runner, 'self.thebar.name')
+        self.assertRaises(RuntimeError, self.runner, 'self.thebar.name=5')
+        self.assertRaises(RuntimeError, self.runner, 'self.thebar.matrix')
+        del self.thebar
 
 class BoundVectorTestCase(Runner):
     """Tests the setting of bounds.
@@ -335,6 +345,38 @@ class BoundVectorTestCase(Runner):
         except ValueError: pass
         self.assertEqual(self.vec.bounds, (3, 5))
 
+class ScaleVectorTestCase(Runner):
+    """Tests setting row and column scaling."""
+    def moreSetUp(self):
+        self.num_vecs = 5
+        self.vc.add(self.num_vecs)
+
+    def testSetScaling(self):
+        """Simple test to see that scaling factors are set."""
+        self.vc[0].scale = 2
+        self.vc[1].scale = 3.14159
+        self.assertAlmostEqual(self.vc[0].scale, 2)
+        self.assertAlmostEqual(self.vc[1].scale, 3.14159)
+
+    def testNonpositiveScaling(self):
+        """Test whether non-positive scale factors throw exceptions."""
+        self.assertRaises(ValueError, self.runner, 'self.vc[0].scale = -1.0')
+        self.assertRaises(ValueError, self.runner, 'self.vc[1].scale = 0.0')
+
+    def testBadScaleType(self):
+        """Tests whether non-numeric scale factors throw exceptions."""
+        self.vc[0].scale = 3.14159
+        self.assertRaises(TypeError, self.runner,
+                          'self.vc[0].scale=complex(2,2)')
+        self.assertRaises(TypeError, self.runner, 'self.vc[1].scale=None')
+        self.assertRaises(TypeError, self.runner, 'self.vc[2].scale={}')
+        self.assertRaises(TypeError, self.runner, 'self.vc[3].scale="foo"')
+        self.assertAlmostEqual(self.vc[0].scale, 3.14159)
+
+    def testDeleteScale(self):
+        """Testss whether deleting a scale factor throws exceptions."""
+        self.assertRaises(AttributeError, self.runner, 'del self.vc[0].scale')
+
 class RowTestCase(unittest.TestCase):
     def moreSetUp(self): pass
     def setUp(self):
@@ -357,3 +399,40 @@ class DeleteRowTestCase(DeleteVectorTestCase, RowTestCase): pass
 class DeleteColumnTestCase(DeleteVectorTestCase, ColumnTestCase): pass
 class BoundRowTestCase(BoundVectorTestCase, RowTestCase): pass
 class BoundColumnTestCase(BoundVectorTestCase, ColumnTestCase): pass
+class ScaleRowTestCase(ScaleVectorTestCase, RowTestCase): pass
+class ScaleColumnTestCase(ScaleVectorTestCase, ColumnTestCase): pass
+
+class ComparisonTestCase(unittest.TestCase):
+    """Test the rich comparison operators on vectors."""
+    def setUp(self):
+        self.lp = LPX()
+        self.r = self.lp.rows
+        self.c = self.lp.cols
+        self.r.add(5)
+        self.c.add(4)
+
+    def testEquality(self):
+        """Simple tests of equality of the same vectors."""
+        self.assertEqual(self.r[2], self.r[2])
+        self.assertEqual(self.c[-1], self.c[3])
+
+    def testInequality(self):
+        """Simple tests of inequality of different vectors."""
+        self.assertNotEqual(self.r[2], self.r[3])
+        self.assertNotEqual(self.c[0], self.c[2])
+
+    def testComparisonSameCollection(self):
+        """Test that vectors in the same collection are ordered by index."""
+        self.failUnless(self.r[0] < self.r[1])
+        self.failUnless(self.r[2] > self.r[1])
+        self.failUnless(self.c[2] > self.c[1])
+        self.failUnless(self.c[2] < self.c[-1])
+
+    def testComparisonDifferentCollection(self):
+        """Test vector comparions in different collections."""
+        a, b = self.r, self.c
+        if b < a: a,b = b,a
+        # A should be the lower bar collection.
+        self.failUnless(a[0] < b[0])
+        self.failUnless(b[1] > a[3])
+        self.failUnless(a[1] < b[0])

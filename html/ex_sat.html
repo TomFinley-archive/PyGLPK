@@ -49,7 +49,7 @@ def solve_sat(expression):
     if len(expression)==0: return [] <font class="comment"># Trivial case.  Otherwise count vars.</font>
     numvars = max([max([abs(v) for v in clause]) for clause in expression])
     lp = glpk.LPX()                  <font class="comment"># Construct an empty linear program.</font>
-    lp.params.msglev = 0             <font class="comment"># Stop the annoying output.</font>
+    glpk.env.term_on = False         <font class="comment"># Stop the annoying output.</font>
     lp.cols.add(2*numvars)           <font class="comment"># As many columns as there are literals.</font>
     for col in lp.cols:              <font class="comment"># Literal must be between false and true.</font>
         col.bounds = 0.0, 1.0
@@ -67,7 +67,6 @@ def solve_sat(expression):
     assert retval == None            <font class="comment"># Should not fail in this fashion.</font>
     if lp.status!='opt': return None <font class="comment"># If no relaxed solution, no exact sol.</font>
 
-    lp.kind = int                    <font class="comment"># Set kind to MIP problem</font>
     for col in lp.cols:
         col.kind = int
     retval = lp.integer()            <font class="comment"># Try to solve this integer problem.</font>
@@ -94,10 +93,10 @@ lp = glpk.LPX()                  <font class="comment"># Construct an empty line
 <p>Calls the LPX constructor to construct an empty linear program.</p>
 
 <pre class="py">
-lp.params.msglev = 0             <font class="comment"># Stop the annoying output.</font>
+glpk.env.term_on = False         <font class="comment"># Stop the annoying output.</font>
 </pre>
 
-<p>Within the linear program there is a member <code>params</code>.  By assigning to various attributes contained within <code>params</code>, you can affect behavior of the LPX object.  In this case, we are assigning 0 to the <code>msglev</code> (message level) parameter, to suppress all but critical output.</p>
+<p>Within the <code>glpk</code> module member <code>env</code>, of type <code>Environment</code>.  By assigning to various attributes contained within <code>env</code>, you can affect behavior of the GLPK object.  In this case, we are assigning <code>False</code> to the <code>term_on</code> (terminal output on) parameter, to suppress all output.</p>
 
 <pre class="py">
 lp.cols.add(2*numvars)           <font class="comment"># As many columns as there are literals.</font>
@@ -169,14 +168,11 @@ if lp.status!='opt': return None <font class="comment"># If no relaxed solution,
 <p>At this point we hold an optimal basic solution to the relaxed problem.  We now go about turning this into a mixed-integer program.</p>
 
 <pre class="py">
-lp.kind = int                    <font class="comment"># Set kind to MIP problem</font>
 for col in lp.cols:
     col.kind = int
 </pre>
 
-<p>We first assign the linear program the <code>kind</code> of <code>int</code> to indicate that we want this to be a mixed integer program.  The <code>kind</code> attribute can be either <code>float</code> or <code>int</code>.  (What a horrible abuse of types!)</p>
-
-<p>Subsequently, we iterate over the columns and tell them we want their structural variables to all assume integer types.</p>
+<p>We first assign the columns the <code>kind</code> of <code>int</code> to indicate that we want this to be an integer program.  The <code>kind</code> attribute can be either <code>float</code>, <code>int</code>, or <code>bool</code>.  (What a horrible abuse of types!)</p>
 
 <pre class="py">
 retval = lp.integer()            <font class="comment"># Try to solve this integer problem.</font>
@@ -265,6 +261,6 @@ lp.obj.maximize = False
 <p>Now only one logical variable is true!</p>
 
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>

@@ -9,7 +9,7 @@ def maxflow(capgraph, s, t):
             node2rnum.setdefault(nto, len(node2rnum))
 
     lp = glpk.LPX()                     # Empty LP instance.
-    lp.params.msglev = 0                # Stop annoying messages.
+    glpk.env.term_on = False            # Stop annoying messages.
     lp.cols.add(len(capgraph))          # As many columns cap-graph edges.
     lp.rows.add(len(node2rnum))         # As many rows as non-source/sink nodes
 

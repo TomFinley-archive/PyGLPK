@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #include "params.h"
@@ -243,10 +242,11 @@ static struct param_getsets Params_pgs[] = {
    "Branching heuristic option (for MIP only):\n"
    "0 -- branch on first variable\n1 -- branch on last variable\n"
    "2 -- branch using a heuristic by Driebeck and Tomlin"},
-  {"btrack", "backtracking heuristic", LPX_K_BTRACK, 1,1,1,0, 0.0, 2.0,
+  {"btrack", "backtracking heuristic", LPX_K_BTRACK, 1,1,1,0, 0.0, 3.0,
    "Backtracking heuristic option (for MIP only):\n"
    "0 -- depth first search\n1 -- breadth first search\n"
-   "2 -- backtrack using the best projection heuristic"},
+   "2 -- best local bound\n"
+   "3 -- backtrack using the best projection heuristic"},
   {"tolint", "tolerance", LPX_K_TOLINT, 2,1,1,0, DBL_EPSILON, 0.001,
    "Absolute tolerance used to check if the current basic solution\n"
    "is integer feasible.  (Do not change this parameter without\n"

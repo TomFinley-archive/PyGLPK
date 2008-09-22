@@ -8,6 +8,10 @@ sys.path.insert(0, newpath)
 from glpk import *
 import unittest
 
+# Testing functions (excepting those testing out) generally shall not
+# benefit from having output.
+env.term_on = False
+
 # These are for backward compatibility with old Python versions, which
 # did not necessarily contain either the basic set type, nor the
 # "sorted" convenience method.
@@ -58,7 +62,7 @@ def testsRunner(obj):
     object, and run the resulting test suite upon a
     unittest.TextTestRunner."""
     print obj.__name__, ':', obj.__doc__
-    return unittest.TextTestRunner().run(extractSuite(obj))
+    return unittest.TextTestRunner(verbosity=2).run(extractSuite(obj))
 
 # The runner convenience class.
 class Runner:

@@ -42,14 +42,12 @@ def hamiltonian(edges):
         node2colnums.setdefault(n2, []).append(colnum)
 
     lp = glpk.LPX()                     <font class="comment"># A new empty linear program</font>
-    lp.params.msglev = 0                <font class="comment"># Stop annoying messages.</font>
+    glpk.env.term_on = False            <font class="comment"># Stop annoying messages.</font>
     lp.cols.add(len(edges))             <font class="comment"># A struct var for each edge</font>
     lp.rows.add(len(node2colnums)+1)    <font class="comment"># Constraint for each node</font>
 
-    lp.kind = int                       <font class="comment"># Define as MIP problem</font>
     for col in lp.cols:                 <font class="comment"># Go over all struct variables</font>
-        col.bounds = 0, 1               <font class="comment"># Either edge selected (1) or not (0)</font>
-        col.kind = int                  <font class="comment"># Make binary, not continuous</font>
+        col.kind = bool                 <font class="comment"># Make binary, not continuous</font>
 
     <font class="comment"># For each node, select at least 1 and at most 2 incident edges.</font>
     for row, edge_column_nums in zip(lp.rows, node2colnums.values()):
@@ -86,7 +84,7 @@ for colnum, edge in enumerate(edges):
 
 <pre class="py">
 lp = glpk.LPX()                     <font class="comment"># A new empty linear program</font>
-lp.params.msglev = 0                <font class="comment"># Stop annoying messages.</font>
+glpk.env.term_on = False            <font class="comment"># Stop annoying messages.</font>
 lp.cols.add(len(edges))             <font class="comment"># A struct var for each edge</font>
 lp.rows.add(len(node2colnums)+1)    <font class="comment"># Constraint for each node</font>
 </pre>
@@ -94,10 +92,8 @@ lp.rows.add(len(node2colnums)+1)    <font class="comment"># Constraint for each 
 <p>In this section, we create a new empty linear program, make it quiet, and add as many columns as there are edges, and as many rows as there are vertices, plus one additional row to encode the constraint that exactly as many edges should be selected as there are vertices minus one.</p>
 
 <pre class="py">
-lp.kind = int                       <font class="comment"># Define as MIP problem</font>
 for col in lp.cols:                 <font class="comment"># Go over all struct variables</font>
-    col.bounds = 0, 1               <font class="comment"># Either edge selected (1) or not (0)</font>
-    col.kind = int                  <font class="comment"># Make binary, not continuous</font>
+    col.kind = bool                 <font class="comment"># Make binary, not continuous</font>
 </pre>
 
 <p>Here, we set our LP as a MIP, and going over the columns set the associated structural variable to be binary (i.e., have 0 to 1 bounds and be an integer variables).</p>
@@ -195,17 +191,15 @@ def tsp(edges):
         node2colnums.setdefault(n2, []).append(colnum)
 
     lp = glpk.LPX()                     <font class="comment"># A new empty linear program</font>
-    lp.params.msglev = 0                <font class="comment"># Stop annoying messages.</font>
+    glpk.env.term_on = False            <font class="comment"># Stop annoying messages.</font>
     lp.cols.add(len(edges))             <font class="comment"># A struct var for each edge</font>
     lp.rows.add(len(node2colnums)+1)    <font class="comment"># Constraint for each node</font>
 
     <strong>lp.obj[:] = [e[-1] for e in edges]  <font class="comment"># Try to minimize the total costs.</font>
     lp.obj.maximize = False</strong>
 
-    lp.kind = int                       <font class="comment"># Define as MIP problem</font>
     for col in lp.cols:                 <font class="comment"># Go over all struct variables</font>
-        col.bounds = 0, 1               <font class="comment"># Either edge selected (1) or not (0)</font>
-        col.kind = int                  <font class="comment"># Make binary, not continuous</font>
+        col.kind = bool                 <font class="comment"># Make binary, not continuous</font>
 
     <font class="comment"># For each node, <strong>select two edges, i.e.., an arrival and a departure</strong>.</font>
     for row, edge_column_nums in zip(lp.rows, node2colnums.values()):
@@ -227,6 +221,6 @@ def tsp(edges):
 </pre>
 
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>

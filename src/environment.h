@@ -17,28 +17,30 @@ You should have received a copy of the GNU General Public License
 along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#ifndef _OBJ_H
-#define _OBJ_H
+#ifndef _ENVIRONMENT_H
+#define _ENVIRONMENT_H
 
 #include <Python.h>
-#include "lp.h"
+#include "glpk.h"
 
-#define Obj_Check(op) PyObject_TypeCheck(op, &ObjType)
+#define ENVIRONMENT_INSTANCE_NAME "env"
+
+#define Environment_Check(op) PyObject_TypeCheck(op, &EnvironmentType)
 
 typedef struct {
   PyObject_HEAD
-  LPXObject *py_lp;
+  int mem_limit;
+  unsigned int term_on:1;
+  PyObject *term_hook;
+  PyObject *version;
   PyObject *weakreflist; // Weak reference list.
-} ObjObject;
+} EnvironmentObject;
 
-extern PyTypeObject ObjType;
-extern PyTypeObject ObjIterType;
+extern PyTypeObject EnvironmentType;
 
-/* Returns a new objective object. */
-ObjObject *Obj_New(LPXObject *py_lp);
-/* Return the number of objective coefficients. */
-int Obj_Size(ObjObject *bc);
+/* Creates a new Environment object for controlling the GLPK environment. */
+EnvironmentObject* Environment_New(void);
 /* Init the type and related types it contains. 0 on success. */
-int Obj_InitType(PyObject *module);
+int Environment_InitType(PyObject *module);
 
-#endif // _OBJ_H
+#endif // _ENVIRONMENT_H

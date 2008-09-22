@@ -46,7 +46,7 @@ def solve_sat(expression):
     lp = glpk.LPX()
 
     # The output GLPK produces is rather annoying.
-    lp.params.msglev = 0
+    glpk.env.term_on = False
     
     # We want twice as many columns (LP variables) as there are
     # logical variables in the expression: one column for each
@@ -104,7 +104,6 @@ def solve_sat(expression):
     # mixed-integer problem, and say we want all column variables
     # integer as well (that is, not just between 0 and 1, but exactly
     # 0 and 1).
-    lp.kind = int
     for col in lp.cols:
         col.kind = int
 
@@ -138,39 +137,15 @@ def verify(expression, assignment):
             return False
     return True
 
-def var_assignments(numvars):
-    """Generator for all 2^numvar assignments"""
-    if numvars <= 0:
-        yield []
-        return
-    for val in (False, True):
-        for v in var_assignments(numvars-1):
-            v.append(val)
-            yield v
+if __name__=='__main__':
+    # If we have arguments, use them to seed the random generator.
+    if len(sys.argv) > 1:
+        random.seed(tuple(sys.argv))
+    expression = generate_cnf(4, 16)
+    assignment = solve_sat(expression)
 
-def latex_for_exp(expression):
-    neg = ['','\\neg ']
-    def latex_for_clause(clause):
-        s = ' \\wedge '.join(neg[lit<0]+'x_%d'%abs(lit) for lit in clause)
-        return '('+s+')'
-    return ' \\vee '.join(latex_for_clause(c) for c in expression)
-            
-
-# If we have arguments, use them to seed the random generator.
-if len(sys.argv) > 1:
-    random.seed(tuple(sys.argv))
-nvar = 5
-expression = generate_cnf(nvar, 20)
-assignment = solve_sat(expression)
-
-print sum(verify(expression, a) for a in var_assignments(nvar))
-
-if assignment:
-    print 'Assignment found.  It is',
-    print 'valid.' if verify(expression, assignment) else 'invalid.'
-    print 'expr:', expression
-    print 'asgn:', assignment
-    print 'latex:', latex_for_exp(expression)
-else:
-    print 'No assignment found.'
-
+    if assignment:
+        print 'Assignment found.  It is',
+        print 'valid.' if verify(expression, assignment) else 'invalid.'
+    else:
+        print 'No assignment found.'

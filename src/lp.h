@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #ifndef _LP_H
@@ -30,7 +29,7 @@ typedef struct {
   PyObject_HEAD
 
   // The LPX C object.
-  LPX *lp;
+  glp_prob *lp;
   // The rows and columns (bar collections).
   PyObject *rows, *cols;
   // The objective.
@@ -46,6 +45,8 @@ typedef struct {
 
 extern PyTypeObject LPXType;
 
+/* Creates a new Python LPX object from GLPK LP structure. */
+LPXObject* LPX_FromLP(glp_prob*lp);
 /* Init the type and related types it contains. 0 on success. */
 int LPX_InitType(PyObject *module);
 

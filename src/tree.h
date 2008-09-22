@@ -17,28 +17,34 @@ You should have received a copy of the GNU General Public License
 along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
-#ifndef _OBJ_H
-#define _OBJ_H
+#ifndef _TREE_H
+#define _TREE_H
 
 #include <Python.h>
 #include "lp.h"
+#include "util.h"
 
-#define Obj_Check(op) PyObject_TypeCheck(op, &ObjType)
+#if GLPK_VERSION(4, 20)
+
+#define Tree_Check(op) PyObject_TypeCheck(op, &TreeType)
 
 typedef struct {
   PyObject_HEAD
+  glp_tree *tree;
+  unsigned char selected:1;
   LPXObject *py_lp;
   PyObject *weakreflist; // Weak reference list.
-} ObjObject;
+} TreeObject;
 
-extern PyTypeObject ObjType;
-extern PyTypeObject ObjIterType;
+extern PyTypeObject TreeType;
+extern PyTypeObject TreeIterType;
+extern PyTypeObject TreeNodeType;
 
-/* Returns a new objective object. */
-ObjObject *Obj_New(LPXObject *py_lp);
-/* Return the number of objective coefficients. */
-int Obj_Size(ObjObject *bc);
+/* Returns a new bar collection object, either over rows or columns. */
+TreeObject *Tree_New(glp_tree *tree, LPXObject *py_lp);
 /* Init the type and related types it contains. 0 on success. */
-int Obj_InitType(PyObject *module);
+int Tree_InitType(PyObject *module);
 
-#endif // _OBJ_H
+#endif // GLPK_VERSION(4, 20)
+
+#endif // _TREE_H

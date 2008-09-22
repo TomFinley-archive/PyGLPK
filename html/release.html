@@ -12,9 +12,23 @@
 
 <h1>PyGLPK Release Notes</h1>
 
-<p>Copyright &copy; 2007, Thomas W. Finley</p>
+<p>Copyright &copy; 2007, 2008, Thomas W. Finley</p>
+
+<h2>PyGLPK 0.3</h2>
+<span class="date">September 22 2008</span>
+
+<ul>
+<li>The PyGLPK has been updated to build against GLPK 4.31, and has been updated to take advantage of many of the features of the new version.  Nearly all feature changes in this version are to reflect changes in the PyGLPK.  This version of PyGLPK will not build against anything prior to GLPK 4.18.</li>
+<li>It is no longer necessary to set the <code>kind</code> of a linear program explicitly to <code>int</code> to make it a MIP.</li>
+<li>The <code>Environment</code> class has been added, with a single instance <code>env</code> at the root level of the <code>glpk</code> module.  With this class one may monitor and control memory usage and terminal output.</li>
+<li>The <code>simplex</code> and <code>integer</code> solvers now accept many keyword parameters to control their functionality.</li>
+<li>Support for callbacks to control the mixed integer programming solution search have been addeed.  See the <code>Tree</code> and <code>TreeNode</code> types.</li>
+<li>The <code>Params</code> class has been removed.  Much of its functionality has been obviated as parameters are passed directly to the solvers, and the functionality of the <code>Environment</code> class.  (If you wish to build a version of PyGLPK with the <code>Params</code> type as it was in previous versions, you may edit <code>useparams = False</code> to be <code>useparams = True</code>.)</li>
+<li>It is now possible to manually change the scaling of rows and columns.</li>
+</ul>
 
 <h2>PyGLPK 0.2</h2>
+<span class="date">July 9 2007</span>
 
 <ul>
 <li>Added weak reference support to all the PyGLPK objects.
@@ -24,12 +38,13 @@
 </ul>
 
 <h2>PyGLPK 0.1</h2>
+<span class="date">March 28 2007</span>
 
 <ul>
 <li>First release.</li>
 </ul>
 
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>

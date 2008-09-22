@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #include "obj.h"
@@ -66,7 +65,7 @@ static Py_ssize_t ObjIter_len(ObjIterObject *it) {
 static PyObject *ObjIter_next(ObjIterObject *it) {
   if (Obj_Size(it->obj) - it->index <= 0) return NULL;
   it->index++;
-  return PyFloat_FromDouble(lpx_get_obj_coef(it->obj->py_lp->lp, it->index));
+  return PyFloat_FromDouble(glp_get_obj_coef(it->obj->py_lp->lp, it->index));
 }
 
 static PySequenceMethods objiter_as_sequence = {
@@ -169,7 +168,7 @@ static PyObject* Obj_subscript(ObjObject *self, PyObject *item) {
     if (sublist==NULL) return NULL;
     for (i=0; i<subsize; ++i) {
       PyObject *objcoef=PyFloat_FromDouble
-	(lpx_get_obj_coef(LP,1+start+i*step));
+	(glp_get_obj_coef(LP,1+start+i*step));
       if (objcoef==NULL) {
 	Py_DECREF(sublist);
 	return NULL;
@@ -199,7 +198,7 @@ static PyObject* Obj_subscript(ObjObject *self, PyObject *item) {
 	return NULL;
       }
       // Try to get the coefficient.
-      PyObject *objcoef=PyFloat_FromDouble(lpx_get_obj_coef(LP,index+1));
+      PyObject *objcoef=PyFloat_FromDouble(glp_get_obj_coef(LP,index+1));
       if (objcoef==NULL) {
 	Py_DECREF(sublist);
 	return NULL;
@@ -211,11 +210,11 @@ static PyObject* Obj_subscript(ObjObject *self, PyObject *item) {
   
   if (Py_None == item) {
     // They input none.  Bastards!
-    return PyFloat_FromDouble(lpx_get_obj_coef(LP,0));
+    return PyFloat_FromDouble(glp_get_obj_coef(LP,0));
   }
   
   if (BarCol_Index(bc, item, &index, -1)) return NULL;
-  return PyFloat_FromDouble(lpx_get_obj_coef(LP, index+1));
+  return PyFloat_FromDouble(glp_get_obj_coef(LP, index+1));
 
   return NULL;
 }
@@ -259,7 +258,7 @@ static int Obj_ass_subscript(ObjObject *self,PyObject *item,PyObject *value) {
     if (PyNumber_Check(value)) {
       if (extract_double(value, &val)) return -1;
       for (i=0; i<subsize; ++i)
-	lpx_set_obj_coef(LP, 1+start+i*step, val);
+	glp_set_obj_coef(LP, 1+start+i*step, val);
       return 0;
     }
     // Try to get the length...
@@ -283,7 +282,7 @@ static int Obj_ass_subscript(ObjObject *self,PyObject *item,PyObject *value) {
 	return -1;
       }
       Py_DECREF(subval);
-      lpx_set_obj_coef(LP, 1+start+i*step, val);
+      glp_set_obj_coef(LP, 1+start+i*step, val);
     }
     Py_DECREF(value);
     // Check if our iteration ended prematurely.
@@ -311,7 +310,7 @@ static int Obj_ass_subscript(ObjObject *self,PyObject *item,PyObject *value) {
       for (i=0; i<subsize; ++i) {
 	if ((subitem = PyTuple_GET_ITEM(item, i))==NULL) return -1;
 	if (BarCol_Index(bc, subitem, &index, -1)) return -1;
-	lpx_set_obj_coef(LP, index+1, val);
+	glp_set_obj_coef(LP, index+1, val);
       }
       return 0;
     }
@@ -347,7 +346,7 @@ static int Obj_ass_subscript(ObjObject *self,PyObject *item,PyObject *value) {
 	Py_DECREF(value);
 	return -1;
       }
-      lpx_set_obj_coef(LP, index+1, val);
+      glp_set_obj_coef(LP, index+1, val);
     }
     Py_DECREF(value);
     // Check if our iteration ended prematurely.
@@ -363,14 +362,14 @@ static int Obj_ass_subscript(ObjObject *self,PyObject *item,PyObject *value) {
 
   if (item == Py_None) {
     if (extract_double(value, &val)) return -1;
-    lpx_set_obj_coef(LP, 0, val);
+    glp_set_obj_coef(LP, 0, val);
     return 0;
   }
 
   // Last possibility is a single index.
   if (BarCol_Index(bc, item, &index, -1)) return -1;
   if (extract_double(value, &val)) return -1;
-  lpx_set_obj_coef(LP, index+1, val);
+  glp_set_obj_coef(LP, index+1, val);
   return 0;
 }
 
@@ -382,14 +381,14 @@ static int Obj_ass_item(ObjObject *self, int index, PyObject *v) {
 /****************** GET-SET-ERS ***************/
 
 static PyObject* Obj_getname(ObjObject *self, void *closure) {
-  char *name = lpx_get_obj_name(LP);
+  const char *name = glp_get_obj_name(LP);
   if (name==NULL) Py_RETURN_NONE;
   return PyString_FromString(name);
 }
 static int Obj_setname(ObjObject *self, PyObject *value, void *closure) {
   char *name;
   if (value==NULL || value==Py_None) {
-    lpx_set_obj_name(LP, NULL);
+    glp_set_obj_name(LP, NULL);
     return 0;
   }
   name = PyString_AsString(value);
@@ -398,38 +397,41 @@ static int Obj_setname(ObjObject *self, PyObject *value, void *closure) {
     PyErr_SetString(PyExc_ValueError, "name may be at most 255 chars");
     return -1;
   }
-  lpx_set_obj_name(LP, name);
+  glp_set_obj_name(LP, name);
   return 0;
 }
 
 static PyObject* Obj_getmaximize(ObjObject *self, void *closure) {
-  return PyBool_FromLong(lpx_get_obj_dir(LP)==LPX_MAX);
+  return PyBool_FromLong(glp_get_obj_dir(LP)==GLP_MAX);
 }
 static int Obj_setmaximize(ObjObject *self, PyObject *value, void *closure) {
   int tomax = PyObject_IsTrue(value);
   if (tomax < 0) return -1;
-  lpx_set_obj_dir(LP, tomax ? LPX_MAX : LPX_MIN);
+  glp_set_obj_dir(LP, tomax ? GLP_MAX : GLP_MIN);
   return 0;
 }
 
 static PyObject* Obj_getshift(ObjObject *self, void *closure) {
-  return PyFloat_FromDouble(lpx_get_obj_coef(LP, 0));
+  return PyFloat_FromDouble(glp_get_obj_coef(LP, 0));
 }
 static int Obj_setshift(ObjObject *self, PyObject *value, void *closure) {
   double v=0.0;
   if (extract_double(value, &v)) return -1;
-  lpx_set_obj_coef(LP, 0, v);
+  glp_set_obj_coef(LP, 0, v);
   return 0;
 }
 
 static PyObject* Obj_getvalue(ObjObject *self, void *closure) {
-  int ls = self->py_lp->last_solver;
-  if (ls <= 0) return PyFloat_FromDouble(lpx_get_obj_val(LP));
-  if (ls == 1) return PyFloat_FromDouble(lpx_ipt_obj_val(LP));
-  if (ls == 2) return PyFloat_FromDouble(lpx_mip_obj_val(LP));
-  PyErr_SetString(PyExc_RuntimeError,
-		  "bad internal state for last solver identifier");
-  return NULL;
+  switch (self->py_lp->last_solver) {
+  case -1:
+  case 0: return PyFloat_FromDouble(glp_get_obj_val(LP));
+  case 1: return PyFloat_FromDouble(glp_ipt_obj_val(LP));
+  case 2: return PyFloat_FromDouble(glp_mip_obj_val(LP));
+  default: 
+    PyErr_SetString(PyExc_RuntimeError,
+		    "bad internal state for last solver identifier");
+    return NULL;
+  }
 }
 static PyObject* Obj_getspecvalue(ObjObject *self, double(*objvalfunc)(LPX*)) {
   return PyFloat_FromDouble(objvalfunc(LP));
@@ -470,7 +472,7 @@ static PyGetSetDef Obj_getset[] = {
    "Objective name, or None if unset.", NULL},
   {"maximize", (getter)Obj_getmaximize, (setter)Obj_setmaximize,
    "True or False depending on whether we are trying to maximize\n"
-   "or minimize this objective function.", NULL},
+   "or minimize this objective function, respectively.", NULL},
   {"shift", (getter)Obj_getshift, (setter)Obj_setshift,
    "The constant shift term of the objective function.", NULL},
   // Objective function value getters...
@@ -478,13 +480,13 @@ static PyGetSetDef Obj_getset[] = {
    "The current value of the objective function.", NULL},
   {"value_s", (getter)Obj_getspecvalue, (setter)NULL,
    "The current value of the simplex objective function.",
-   (void*)lpx_get_obj_val},
+   (void*)glp_get_obj_val},
   {"value_i", (getter)Obj_getspecvalue, (setter)NULL,
    "The current value of the interior point objective function.",
-   (void*)lpx_ipt_obj_val},
+   (void*)glp_ipt_obj_val},
   {"value_m", (getter)Obj_getspecvalue, (setter)NULL,
    "The current value of the MIP objective function.",
-   (void*)lpx_mip_obj_val},
+   (void*)glp_mip_obj_val},
   {NULL}
 };
 

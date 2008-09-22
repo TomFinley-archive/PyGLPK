@@ -1,7 +1,7 @@
 """Tests for setting parameters."""
 
 from testutils import *
-import random
+import random, math, sys
 
 class ParamsTestCase(Runner, unittest.TestCase):
     """Tests for setting and getting parameters of the LP."""
@@ -22,10 +22,10 @@ class ParamsTestCase(Runner, unittest.TestCase):
             p2v[n] = 0,1
             p2bv[n] = -100, -1, 2, 3, 4, 5
         # These have legal values 0,1,2
-        for n in 'branch btrack mpsobj'.split():
+        for n in 'branch mpsobj'.split():
             p2v[n] = 0,1,2
         # These have legal values 0,1,2,3
-        for n in 'msglev scale'.split():
+        for n in 'msglev scale btrack'.split():
             p2v[n] = 0,1,2,3
         # These all have the following illegal typed values.
         illegals = 'hi!', [1], {2:5}, 0.5, complex(1,0), self.lp
@@ -144,6 +144,11 @@ class ParamsTestCase(Runner, unittest.TestCase):
         for n, v in pp:
             self.assertRaises(TypeError, setattr, self.lp.params, n, v)
 
+try:
+    Params
+except NameError:
+    del ParamsTestCase
+
 class IntegerProgramTestCase(Runner, unittest.TestCase):
     """Tests for setting the program type (continuous/int)."""
     def setUp(self):
@@ -158,22 +163,15 @@ class IntegerProgramTestCase(Runner, unittest.TestCase):
         self.assertEqual([r.kind for r in self.lp.rows], [float]*4)
 
     def testSettingKind(self):
-        """Test setting the kind of the problem."""
-        self.lp.kind = int
-        self.assertEqual(self.lp.kind, int)
-        self.lp.kind = float
-        self.assertEqual(self.lp.kind, float)
-
-    def testSettingColumnsIntBeforeProblemIsInt(self):
-        """Test setting columns as ints before setting the problem int."""
-        self.lp.cols.add(5)
-        self.assertRaises(ValueError, self.runner,
-                          'self.lp.cols[2].kind = int')
+        """Test that the kind of the problem is not mutable."""
+        target_error = AttributeError
+        if sys.hexversion < 0x02050000: target_error = TypeError
+        self.assertRaises(target_error, setattr, self.lp, 'kind', int)
+        self.assertRaises(target_error, setattr, self.lp, 'kind', float)
 
     def testSettingColumnsInt(self):
         """Test setting columns as int."""
         self.lp.cols.add(5)
-        self.lp.kind = int
         for c in [-1, 1, 2]:
             self.lp.cols[c].kind = int
         self.assertEqual([c.kind for c in self.lp.cols],
@@ -182,7 +180,6 @@ class IntegerProgramTestCase(Runner, unittest.TestCase):
     def testIntAndBinaryCounters(self):
         """Test nint and nbin counters."""
         self.lp.cols.add(5)
-        self.lp.kind = int
         # Convenience function to check the values of nint and nbin.
         def nn(ni,nb): self.assertEqual((self.lp.nint, self.lp.nbin), (ni,nb))
         # Do a series of ops and watch how nint and nbin changes.
@@ -201,19 +198,398 @@ class IntegerProgramTestCase(Runner, unittest.TestCase):
         self.lp.cols[ 2].bounds = 0,1;  nn(2,0)
         self.lp.cols[ 2].kind = int;    nn(3,1)
 
+    def testIntBounds(self):
+        """Tests setting various rows and columns as integer or boolean."""
+        self.lp.cols.add(3)
+        x,y,z = tuple(self.lp.cols)
+        def tk(*targetkinds):
+            """Test kind convenience function."""
+            self.assertEqual(targetkinds, tuple(c.kind for c in self.lp.cols))
+            if set(targetkinds)==set([float]): pk = float
+            else: pk = int
+            self.assertEqual(pk, self.lp.kind)
+        tk(float,float,float)
+        x.kind = int
+        x.bounds = 0, 5
+        tk(int,float,float)
+        y.kind = bool
+        tk(int,bool,float)
+        y.bounds = 0, 4
+        tk(int,int,float)
+        x.bounds = 0, 1
+        tk(bool,int,float)
+        x.kind = float
+        tk(float,int,float)
+        y.kind = float
+        tk(float,float,float)
+
     def testSettingsRowsInt(self):
         """Test setting rows as int, which should always fail."""
         self.lp.rows.add(5)
         self.assertRaises(ValueError, self.runner,
                           'self.lp.rows[2].kind = int')
-        self.lp.kind = int
         self.assertRaises(ValueError, self.runner,
                           'self.lp.rows[4].kind = int')
 
     def testSettingsRowsWithBadObject(self):
         """Test setting columns as something neither int or float."""
         self.lp.cols.add(5)
-        for kind in ['complex', 'bool', '"belay"', '2', '{1:3}']:
+        for kind in ['complex', '"belay"', '2', '{1:3}']:
             self.assertRaises(ValueError, self.runner,
-                              'self.lp.cols[2].kind = %r' % kind)
+                              'self.lp.cols[2].kind = %s' % kind)
+
+class SimplexControlParametersTestCase(Runner, unittest.TestCase):
+    """Tests for the simplex method's control parameters."""
+    def setUp(self):
+        lp = self.lp = LPX()
+        lp.rows.add(1)
+        lp.cols.add(2)
+        for c in lp.cols: c.bounds=0,1
+        lp.obj[:] = [1,1]
+        lp.obj.maximize = True
+        lp.rows[0].matrix = [0.5, 1.0]
+        lp.rows[0].bounds = None, 1
+        self.num_illegals = 100
+
+    def runValueErrorTest(self, param_name, legals):
+        """Runs a test of valid values."""
+        valid_values = set(legals)
+        rgen = random.Random(0)
+        # Start with "boundary" values.
+        values = [min(valid_values)-1, max(valid_values)+1]
+        # Come up with a lot of illegal values.
+        while len(values)<self.num_illegals:
+            randint = random.randint(-20000,20000)
+            if randint not in valid_values: values.append(randint)
+        for value in values:
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(%s=%d)"%(param_name, value))
+
+    def testMessageLevel(self):
+        """Test the msg_lev parameter."""
+        # For obvious reasons, we only try no output unfortunately.
+        self.lp.simplex(msg_lev=LPX.MSG_OFF)
+
+    def testMessageLevelValueErrors(self):
+        """Test whether illegal values for msg_lev throw exceptions."""
+        self.runValueErrorTest("msg_lev", [
+            LPX.MSG_OFF, LPX.MSG_ERR, LPX.MSG_ON, LPX.MSG_ALL])
+
+    def testSimplexMethod(self):
+        """Test the meth parameter."""
+        if env.version>=(4,31): legals=LPX.PRIMAL, LPX.DUAL, LPX.DUALP
+        else: legals=LPX.PRIMAL, LPX.DUALP
+        for p in legals:
+            self.lp.simplex(meth=p)
+
+    def testSimplexMethodValueErrors(self):
+        """Test whether illegal values for meth throw exceptions."""
+        if env.version>=(4,31): legals=LPX.PRIMAL, LPX.DUAL, LPX.DUALP
+        else: legals=LPX.PRIMAL, LPX.DUALP
+        self.runValueErrorTest("meth", legals)
+
+    def testPricingTechnique(self):
+        """Test the pricing parameter."""
+        for p in (LPX.PT_STD, LPX.PT_PSE):
+            self.lp.simplex(pricing=p)
+
+    def testPricingTechniqueValueErrors(self):
+        """Test whether illegal values for pricing throw exceptions."""
+        self.runValueErrorTest("pricing", [
+            LPX.PT_STD, LPX.PT_PSE])
+
+    def testRatioTestTechnique(self):
+        """Test the r_test parameter."""
+        for p in (LPX.RT_STD, LPX.RT_HAR):
+            self.lp.simplex(pricing=p)
+
+    def testRatioTestTechniqueValueErrors(self):
+        """Test whether illegal values for r_test throw exceptions."""
+        self.runValueErrorTest("r_test", [
+            LPX.RT_STD, LPX.RT_HAR])
+
+    def testTolerancePrimalFeasible(self):
+        """Test the tol_bnd parameter."""
+        for p in (1e-6, 1e-7, 1e-1, .99):
+            self.lp.simplex(tol_bnd=p)
+
+    def testTolerancePrimalFeasibleValueErrors(self):
+        """Test whether illegal values for tol_bnd throw exceptions."""
+        for p in (-1, -1e6, 0, 1, 1e1, 1e5):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(tol_bnd=%g)"%p)
+
+    def testToleranceDualFeasible(self):
+        """Test the tol_dj parameter."""
+        for p in (1e-6, 1e-7, .99):
+            self.lp.simplex(tol_dj=p)
+
+    def testToleranceDualFeasibleValueErrors(self):
+        """Test whether illegal values for tol_dj throw exceptions."""
+        for p in (-1, -1e6, 0, 1, 1e1, 1e5):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(tol_dj=%g)"%p)
+
+    def testTolerancePivotalFeasible(self):
+        """Test the tol_piv parameter."""
+        for p in (1e-6, 1e-7, 1e-1, .99):
+            self.lp.simplex(tol_piv=p)
+
+    def testTolerancePivotalFeasibleValueErrors(self):
+        """Test whether illegal values for tol_piv throw exceptions."""
+        for p in (-1, -1e6, 0, 1, 1e1, 1e5):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(tol_piv=%g)"%p)
+
+    def testObjectiveLowerLimit(self):
+        """Test the obj_ll parameter."""
+        for p in (-200,-100,0,3.14159,100,200):
+            self.lp.simplex(obj_ll=p)
+
+    def testObjectiveLowerLimitTypeErrors(self):
+        """Test whether illegal types for obj_ll throw exceptions."""
+        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+            self.assertRaises(TypeError, self.runner,
+                              "self.lp.simplex(obj_ll=%r)"%p)
+
+    def testObjectiveUpperLimit(self):
+        """Test the obj_ul parameter."""
+        for p in (-200,-100,0,3.14159,100,200):
+            self.lp.simplex(obj_ul=p)
+
+    def testObjectiveUpperLimitTypeErrors(self):
+        """Test whether illegal types for obj_ul throw exceptions."""
+        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+            self.assertRaises(TypeError, self.runner,
+                              "self.lp.simplex(obj_ul=%r)"%p)
+
+    def testIterationLimit(self):
+        """Test the it_lim parameter."""
+        for p in (0,100,200,1000):
+            self.lp.simplex(it_lim=p)
+
+    def testIterationLimitValueErrors(self):
+        """Test whether illegal values for it_lim throw exceptions."""
+        for p in (-1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(it_lim=%d)"%p)
+
+    def testTimeLimit(self):
+        """Test the tm_lim parameter."""
+        for p in (0,100,200,1000):
+            self.lp.simplex(tm_lim=p)
+
+    def testTimeLimitValueErrors(self):
+        """Test whether illegal values for tm_lim throw exceptions."""
+        for p in (-1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(tm_lim=%d)"%p)
+
+    def testOutputFrequency(self):
+        """Test the out_frq parameter."""
+        for p in (1,100,200,1000):
+            self.lp.simplex(out_frq=p)
+
+    def testOutputFrequencyValueErrors(self):
+        """Test whether illegal values for out_frq throw exceptions."""
+        for p in (0, -1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(out_frq=%d)"%p)
+
+    def testOutputDelay(self):
+        """Test the out_dly parameter."""
+        for p in (0,1,100,200,1000):
+            self.lp.simplex(out_dly=p)
+
+    def testOutputDelayValueErrors(self):
+        """Test whether illegal values for out_dly throw exceptions."""
+        for p in (-1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.simplex(out_dly=%d)"%p)
+
+    def testPresolver(self):
+        """Test the presolve parameter."""
+        self.lp.simplex(presolve=False)
+        self.lp.simplex(presolve=True)
+
+    def testPresolverTypeErrors(self):
+        """Test whether illegal types for obj_ll throw exceptions."""
+        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+            self.assertRaises(TypeError, self.runner,
+                              "self.lp.simplex(presolve=%r)"%p)
+
+class IntegerControlParametersTestCase(Runner, unittest.TestCase):
+    """Tests for the simplex method's control parameters.
+
+    Note that one control parameter, callback, is not tested here, but
+    rather in the solve test suite.  For GLPK 4.33 many of these options
+    are not really tested since GLPK 4.33 appears to be seriously broken
+    with respect to parameter setting."""
+    def setUp(self):
+        lp = self.lp = LPX()
+        lp.rows.add(2)
+        lp.cols.add(2)
+        for c in lp.cols:
+            c.bounds = None, None
+            c.kind = int
+        lp.obj[:] = [1,1]
+        lp.obj.maximize = True
+        lp.rows[0].matrix, lp.rows[1].matrix = [2, 1], [1, 2]
+        lp.rows[0].bounds, lp.rows[1].bounds = (None, 6.5), (None, 6.5)
+        lp.simplex() # This should have both column vars at 2.1666...
+        self.num_illegals = 100
+
+    def runValueErrorTest(self, param_name, legals):
+        """Runs a test of valid values."""
+        valid_values = set(legals)
+        rgen = random.Random(0)
+        # Start with "boundary" values.
+        values = [min(valid_values)-1, max(valid_values)+1]
+        # Come up with a lot of illegal values.
+        while len(values)<self.num_illegals:
+            randint = random.randint(-20000,20000)
+            if randint not in valid_values: values.append(randint)
+        for value in values:
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(%s=%d)"%(param_name, value))
+
+    def testMessageLevel(self):
+        """Test the msg_lev parameter."""
+        # For obvious reasons, we only try no output unfortunately.
+        if env.version==(4,33): return
+        self.lp.integer(msg_lev=LPX.MSG_OFF)
+
+    def testMessageLevelValueErrors(self):
+        """Test whether illegal values for msg_lev throw exceptions."""
+        self.runValueErrorTest("msg_lev", [
+            LPX.MSG_OFF, LPX.MSG_ERR, LPX.MSG_ON, LPX.MSG_ALL])
+
+    def testBranchingTechnique(self):
+        """Test the br_tech parameter."""
+        if env.version==(4,33): return
+        legals=LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH
+        for p in legals:
+            self.lp.integer(br_tech=p)
+
+    def testBranchingTechniqueValueErrors(self):
+        """Test whether illegal values for br_tech throw exceptions."""
+        self.runValueErrorTest("br_tech", [
+            LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH])
+
+    def testBacktrackingTechnique(self):
+        """Test the bt_tech parameter."""
+        if env.version==(4,33): return
+        legals=LPX.BT_DFS, LPX.BT_BFS, LPX.BT_BLB, LPX.BT_BPH
+        for p in legals:
+            self.lp.integer(bt_tech=p)
+
+    def testBacktrackingTechniqueValueErrors(self):
+        """Test whether illegal values for bt_tech throw exceptions."""
+        self.runValueErrorTest("bt_tech", [
+            LPX.BT_DFS, LPX.BT_BFS, LPX.BT_BLB, LPX.BT_BPH])
+
+    def testPreprocessingTechnique(self):
+        """Test the pp_tech parameter."""
+        if env.version<(4,21) or env.version==(4,33): return
+        legals=LPX.PP_NONE, LPX.PP_ROOT, LPX.PP_ALL
+        for p in legals:
+            self.lp.integer(pp_tech=p)
+
+    def testPreprocessingTechniqueValueErrors(self):
+        """Test whether illegal values for pp_tech throw exceptions."""
+        if env.version<(4,21): return
+        self.runValueErrorTest("pp_tech", [
+            LPX.PP_NONE, LPX.PP_ROOT, LPX.PP_ALL])
+
+    def testGomorysMixedCuts(self):
+        """Test the gmi_cuts option."""
+        if env.version<(4,24) or env.version==(4,33): return
+        legals=True, False
+        for p in legals:
+            self.lp.integer(gmi_cuts=p)
+
+    def testGomorysMixedCutsTypeErrors(self):
+        """Test whether illegal types for gmi_cuts throw exceptions."""
+        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+            self.assertRaises(TypeError, self.runner,
+                              "self.lp.integer(gmi_cuts=%r)"%p)
+
+    def testMixedIntegerRoundingCuts(self):
+        """Test the mir_cuts option."""
+        if env.version<(4,23) or env.version==(4,33): return
+        legals=True, False
+        for p in legals:
+            self.lp.integer(mir_cuts=p)
+
+    def testMixedIntegerRoundingCutsTypeErrors(self):
+        """Test whether illegal types for mir_cuts throw exceptions."""
+        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+            self.assertRaises(TypeError, self.runner,
+                              "self.lp.integer(mir_cuts=%r)"%p)
+
+    def testToleranceIntegerFeasible(self):
+        """Test the tol_int option."""
+        if env.version==(4,33): return
+        legals = 1e-7, 1e-5, 1e-3, 1e-1, .99
+        for p in legals:
+            self.lp.integer(tol_int=p)
+
+    def testToleranceIntegerFeasibleValueErrors(self):
+        """Test whether illegal values for tol_obj throw exceptions."""
+        for p in (-1, -1e6, 0, 1, 1e1, 1e5):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(tol_int=%g)"%p)
+
+    def testToleranceObjective(self):
+        """Test the tol_obj option."""
+        if env.version==(4,33): return
+        legals = 1e-7, 1e-5, 1e-3, 1e-1, .99
+        for p in legals:
+            self.lp.integer(tol_obj=p)
+
+    def testToleranceObjectiveValueErrors(self):
+        """Test whether illegal values for tol_obj throw exceptions."""
+        for p in (-1, -1e6, 0, 1, 1e1, 1e5):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(tol_obj=%g)"%p)
+
+    def testTimeLimit(self):
+        """Test the tm_lim parameter."""
+        if env.version==(4,33): return
+        for p in (0,100,200,1000):
+            self.lp.integer(tm_lim=p)
+
+    def testTimeLimitValueErrors(self):
+        """Test whether illegal values for tm_lim throw exceptions."""
+        for p in (-1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(tm_lim=%d)"%p)
+
+    def testOutputFrequency(self):
+        """Test the out_frq parameter."""
+        if env.version==(4,33): return
+        for p in (1,100,200,1000):
+            self.lp.integer(out_frq=p)
+
+    def testOutputFrequencyValueErrors(self):
+        """Test whether illegal values for out_frq throw exceptions."""
+        for p in (0, -1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(out_frq=%d)"%p)
+
+    def testOutputDelay(self):
+        """Test the out_dly parameter."""
+        if env.version==(4,33): return
+        for p in (0,1,100,200,1000):
+            self.lp.integer(out_dly=p)
+
+    def testOutputDelayValueErrors(self):
+        """Test whether illegal values for out_dly throw exceptions."""
+        for p in (-1, -100, -200, -1000000):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(out_dly=%d)"%p)
+
+# Integer control parameters did not exist prior to GLPK 4.20.  This
+# is the simplest way to avoid the tests.
+if env.version<(4,20): del IntegerControlParametersTestCase
 

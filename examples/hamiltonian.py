@@ -8,14 +8,12 @@ def hamiltonian(edges):
         node2colnums.setdefault(n2, []).append(colnum)
 
     lp = glpk.LPX()                     # A new empty linear program
-    lp.params.msglev = 0                # Stop annoying messages.
+    glpk.env.term_on = False            # Stop annoying messages.
     lp.cols.add(len(edges))             # A struct var for each edge
     lp.rows.add(len(node2colnums)+1)    # Constraint for each node
 
-    lp.kind = int                       # Define as MIP problem
     for col in lp.cols:                 # Go over all struct variables
-        col.bounds = 0, 1               # Either edge selected (1) or not (0)
-        col.kind = int                  # Make binary, not continuous
+        col.kind = bool                 # Make binary, not continuous
 
     # For each node, select at least 1 and at most 2 incident edges.
     for row, edge_column_nums in zip(lp.rows, node2colnums.values()):
@@ -28,9 +26,6 @@ def hamiltonian(edges):
 
     assert lp.simplex() == None         # Should not fail this way.
     if lp.status != 'opt': return None  # If no relaxed sol., no exact sol.
-
-    assert lp.integer() == None         # Should not fail this way.
-    if lp.status != 'opt': return None  # Count not find integer solution!
 
     # Return the edges whose associated struct var has value 1.
     return [edge for edge, col in zip(edges, lp.cols) if col.value > 0.99]
@@ -69,14 +64,13 @@ def tsp(edges):
         node2colnums.setdefault(n2, []).append(colnum)
 
     lp = glpk.LPX()                     # A new empty linear program
-    lp.params.msglev = 0                # Stop annoying messages.
+    glpk.env.term_on = False            # Stop annoying messages.
     lp.cols.add(len(edges))             # A struct var for each edge
     lp.rows.add(len(node2colnums)+1)    # Constraint for each node
 
     lp.obj[:] = [e[-1] for e in edges]  # Try to minimize the total costs.
     lp.obj.maximize = False
 
-    lp.kind = int                       # Define as MIP problem
     for col in lp.cols:                 # Go over all struct variables
         col.bounds = 0, 1               # Either edge selected (1) or not (0)
         col.kind = int                  # Make binary, not continuous

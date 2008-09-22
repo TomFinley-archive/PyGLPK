@@ -1,16 +1,12 @@
-ifeq ($(OSTYPE),linux)
-	PYTHON := python
-else
-	PYTHON := python
-endif
-
-VERSION := 0.2
-
+VERSION := 0.3
 PYTHON := python
-
 MODNAME := glpk
-
 ARCHIVE := py$(MODNAME)-$(VERSION)
+CURDIR := $(shell pwd)
+
+.PHONY : all test install clean cleaner archive syncto syncfrom valgrinder docs
+
+glpk.so: all
 
 all:
 	$(PYTHON) setup.py build
@@ -39,7 +35,9 @@ $(ARCHIVE).tar.bz2: cleaner
 
 archive: $(ARCHIVE).tar.bz2
 
-html/glpk.html:
+# Make the documents.
+
+html/glpk.html: glpk.so
 	pydoc -w glpk
 	mv glpk.html $@
 
@@ -49,10 +47,15 @@ README.txt: html/readme.html
 RELEASE.txt: html/release.html
 	links -dump $< > $@
 
+docs: html/glpk.html README.txt RELEASE.txt
+
+# Functions for remote synchronization of this project, mostly for
+# backup purposes.
+
 REMOTE := tomf@kodiak.cs.cornell.edu:glpk/
 
 syncto:
-	rsync -rvtu --exclude 'build' --exclude '*~' * "$(REMOTE)"
+	rsync -rvtu --exclude 'build' --exclude '*~' --exclude "locals" --exclude "glpk" * "$(REMOTE)"
 syncfrom:
 	rsync -rvtu "$(REMOTE)[^b]*" .
 
@@ -61,3 +64,21 @@ valgrinder2:
 
 valgrinder:
 	valgrind --tool=memcheck --leak-check=yes --db-attach=yes --suppressions=valgrind-python.supp $(PYTHON)
+
+# Builds for the locally built glpk.
+
+glpk/glpk-4.%: glpk/glpk-4.%.tar.gz
+	cd glpk; tar -zxf ../$<
+
+locals/%: glpk/glpk-%
+	cd glpk/glpk-$* ; ./configure --prefix=$(CURDIR)/locals/$* ; make -j 8 CFLAGS=-m32 LDFLAGS=-m32 install
+
+local% : locals/4.%
+	$(PYTHON) setup.py build glpver=$*
+	rm -f $(MODNAME).so
+	ln -s build/lib.*/$(MODNAME).so
+
+testlocal% :
+	make clean
+	make local$*
+	make test

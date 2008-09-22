@@ -50,7 +50,7 @@ def maxflow(capgraph, s, t):
             node2rnum.setdefault(nto, len(node2rnum))
 
     lp = glpk.LPX()                     <font class="comment"># Empty LP instance.</font>
-    lp.params.msglev = 0                <font class="comment"># Stop annoying messages.</font>
+    glpk.env.term_on = False            <font class="comment"># Stop annoying messages.</font>
     lp.cols.add(len(capgraph))          <font class="comment"># As many columns cap-graph edges.</font>
     lp.rows.add(len(node2rnum))         <font class="comment"># As many rows as non-source/sink nodes</font>
 
@@ -230,5 +230,7 @@ print maxflow(capgraph, 's', 't')
  ('a', 't', 1.0), ('b', 't', 3.5)]</pre>
 corresponding to the flow shown in the graph.</p>
 
+<hr/>
+Thomas Finley, 2007, 2008
 </body>
 </html>

@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #include "util.h"
@@ -222,6 +221,7 @@ int util_extract_iif(PyObject *ob, PyObject*lpobj,
     if (curr_index2==0) ++curr_index1;
   }
   Py_DECREF(iter);
+  //PyErr_SetString(PyExc_RuntimeError, "Just a useless error!");
   if (PyErr_Occurred()) {
     // Something bad happened in iteration.
     Py_XDECREF(item);
@@ -273,29 +273,16 @@ int util_add_type(PyObject *module, PyTypeObject *type) {
   return 0;
 }
 
-int util_toggle_output(LPX*lp) {
-  static char outputon=1;
-  static int save_stderr, save_stdout;
-  static FILE* f;
-  
-  // Only do it if we've quieted all output.
-  if (lpx_get_int_parm(lp, LPX_K_MSGLEV)) return outputon;
-  if (outputon) {
-    // Try to turn it off.
-    save_stderr = dup(fileno(stderr));
-    save_stdout = dup(fileno(stderr));
-    f = fopen("/dev/null", "w");
-    dup2(fileno(f), fileno(stderr));
-    dup2(fileno(f), fileno(stdout));
-    outputon = 0;
-  } else {
-    // Try to turn it on.
-    fclose(f);
-    dup2(save_stderr, fileno(stderr));
-    dup2(save_stdout, fileno(stdout));
-    close(save_stderr);
-    close(save_stdout);
-    outputon = 1;
-  }
-  return (int)outputon;
+/**
+ * Inserts an integer for value into the dictionary p with a key.
+ * Returns 0 on success, or -1 on failure.
+ */
+int PyDict_SetIntString(PyObject *p, const char *key, int val) {
+  PyObject *i;
+  int retval;
+  i = PyInt_FromLong(val);
+  if (i==NULL) return -1;
+  retval = PyDict_SetItemString(p, key, i);
+  Py_DECREF(i);
+  return retval;
 }

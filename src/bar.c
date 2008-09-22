@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #include "bar.h"
@@ -29,7 +28,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 static int Bar_traverse(BarObject *self, visitproc visit, void *arg) {
   Py_VISIT((PyObject*)self->py_bc);
-  //printf("traverse bar!\n");
   return 0;
 }
 
@@ -38,7 +36,6 @@ static int Bar_clear(BarObject *self) {
     PyObject_ClearWeakRefs((PyObject*)self);
   }
   Py_CLEAR(self->py_bc);
-  //printf("clearing bar!\n");
   return 0;
 }
 
@@ -82,7 +79,9 @@ BarObject *Bar_New(BarColObject *py_bc, int index) {
 static PyObject* Bar_Str(BarObject *self) {
   // Returns a string representation of this object.
   return PyString_FromFormat
-    ("<%s %d of lp %p>", Bar_Row(self)?"row":"col", Bar_Index(self), LP);
+    ("<%s, %s %d of %s %p>", self->ob_type->tp_name,
+     Bar_Row(self)?"row":"col", Bar_Index(self),
+     LPXType.tp_name, self->py_bc->py_lp);
 }
 
 int Bar_Valid(BarObject *self, int except) {
@@ -97,11 +96,11 @@ int Bar_Valid(BarObject *self, int except) {
 PyObject *Bar_GetMatrix(BarObject *self) {
   int nnz, i;
   PyObject *retval;
-  int (*get_mat)(LPX*,int,int[],double[]);
+  int (*get_mat)(glp_prob*,int,int[],double[]);
 
   if (!Bar_Valid(self, 1)) return NULL;
 
-  get_mat = Bar_Row(self) ? lpx_get_mat_row : lpx_get_mat_col;
+  get_mat = Bar_Row(self) ? glp_get_mat_row : glp_get_mat_col;
   i = Bar_Index(self)+1;
   nnz = get_mat(LP, i, NULL, NULL);
   retval = PyList_New(nnz);
@@ -138,7 +137,7 @@ int Bar_SetMatrix(BarObject *self, PyObject *newvals) {
     if (!util_extract_if(newvals, bc, &len, &ind, &val)) return -1;
   }
   // Input the stuff into the LP constraint matrix.
-  (Bar_Row(self) ? lpx_set_mat_row : lpx_set_mat_col)
+  (Bar_Row(self) ? glp_set_mat_row : glp_set_mat_col)
     (LP, Bar_Index(self)+1, len, ind-1, val-1);
   // Free the memory.
   if (len) {
@@ -146,6 +145,37 @@ int Bar_SetMatrix(BarObject *self, PyObject *newvals) {
     free(val);
   }
   return 0;
+}
+
+static PyObject* Bar_richcompare(BarObject *v, PyObject *w, int op) {
+  if (!Bar_Check(w)) {
+    switch (op) {
+    case Py_EQ: Py_RETURN_FALSE;
+    case Py_NE: Py_RETURN_FALSE;
+    default:
+      Py_INCREF(Py_NotImplemented);
+      return Py_NotImplemented;
+    }
+  }
+  // Now we know it is a bar object.
+  BarObject *x = (BarObject *)w;
+  if (v->py_bc != x->py_bc) {
+    // "Inherit" the judgement of our containing objects.
+    return PyObject_RichCompare((PyObject*)v->py_bc, (PyObject*)x->py_bc, op);
+  }
+  // Now we know it is a bar object, and part of the same bar
+  // collection no less.
+  switch (op) {
+  case Py_EQ: if (v->index==x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  case Py_NE: if (v->index!=x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  case Py_LE: if (v->index<=x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  case Py_GE: if (v->index>=x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  case Py_LT: if (v->index< x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  case Py_GT: if (v->index> x->index) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  default:
+    Py_INCREF(Py_NotImplemented);
+    return Py_NotImplemented;
+  }
 }
 
 /********** ABSTRACT PROTOCOL FUNCTIONS *******/
@@ -164,7 +194,7 @@ static int Bar_ass_item(BarObject *self, int index, PyObject *v) {
 /****************** GET-SET-ERS ***************/
 static PyObject* Bar_getname(BarObject *self, void *closure) {
   if (!Bar_Valid(self, 1)) return NULL;
-  const char *name = (Bar_Row(self) ? lpx_get_row_name : lpx_get_col_name)
+  const char *name = (Bar_Row(self) ? glp_get_row_name : glp_get_col_name)
     (LP, Bar_Index(self)+1);
   if (name==NULL) Py_RETURN_NONE;
   return PyString_FromString(name);
@@ -173,7 +203,7 @@ static int Bar_setname(BarObject *self, PyObject *value, void *closure) {
   char *name;
   if (!Bar_Valid(self, 1)) return -1;
   if (value==NULL || value==Py_None) {
-    (Bar_Row(self) ? lpx_set_row_name : lpx_set_col_name)
+    (Bar_Row(self) ? glp_set_row_name : glp_set_col_name)
       (LP, Bar_Index(self)+1, NULL);
     return 0;
   }
@@ -198,14 +228,14 @@ static PyObject* Bar_getbounds(BarObject *self, void *closure) {
   if (!Bar_Valid(self, 1)) return NULL;
   
   i = Bar_Index(self)+1;
-  lb = (Bar_Row(self) ? lpx_get_row_lb : lpx_get_col_lb)(LP, i);
-  ub = (Bar_Row(self) ? lpx_get_row_ub : lpx_get_col_ub)(LP, i);
+  lb = (Bar_Row(self) ? glp_get_row_lb : glp_get_col_lb)(LP, i);
+  ub = (Bar_Row(self) ? glp_get_row_ub : glp_get_col_ub)(LP, i);
 
-  switch ((Bar_Row(self) ? lpx_get_row_type : lpx_get_col_type)(LP, i)) {
-  case LPX_FR: return Py_BuildValue("OO", Py_None, Py_None);
-  case LPX_LO: return Py_BuildValue("fO", lb, Py_None);
-  case LPX_UP: return Py_BuildValue("Of", Py_None, ub);
-  case LPX_DB: case LPX_FX: return Py_BuildValue("ff", lb, ub);
+  switch ((Bar_Row(self) ? glp_get_row_type : glp_get_col_type)(LP, i)) {
+  case GLP_FR: return Py_BuildValue("OO", Py_None, Py_None);
+  case GLP_LO: return Py_BuildValue("fO", lb, Py_None);
+  case GLP_UP: return Py_BuildValue("Of", Py_None, ub);
+  case GLP_DB: case GLP_FX: return Py_BuildValue("ff", lb, ub);
   }
   // We should never be here.
   PyErr_SetString(PyExc_SystemError, "unrecognized bound type");
@@ -216,15 +246,15 @@ static int Bar_setbounds(BarObject *self, PyObject *value, void *closure) {
   double lb=0.0, ub=0.0;
   PyObject *lo, *uo;
 
-  void (*bounder)(LPX*,int,int,double,double) = NULL;
+  void (*bounder)(glp_prob*,int,int,double,double) = NULL;
   if (!Bar_Valid(self, 1)) return -1;
 
   i = Bar_Index(self)+1;
-  bounder = Bar_Row(self) ? lpx_set_row_bnds : lpx_set_col_bnds;
+  bounder = Bar_Row(self) ? glp_set_row_bnds : glp_set_col_bnds;
 
   if (value==NULL || value==Py_None) {
     // We want it unbounded and free.
-    bounder(LP, i, LPX_FR, 0.0, 0.0);
+    bounder(LP, i, GLP_FR, 0.0, 0.0);
     return 0;
   }
 
@@ -234,7 +264,8 @@ static int Bar_setbounds(BarObject *self, PyObject *value, void *closure) {
     if (!value) return -1;
     lb = PyFloat_AsDouble(value);
     Py_DECREF(value);
-    bounder(LP, i, LPX_FX, lb, lb);
+    if (PyErr_Occurred()) return -1;
+    bounder(LP, i, GLP_FX, lb, lb);
     return 0;
   }
 
@@ -258,10 +289,10 @@ static int Bar_setbounds(BarObject *self, PyObject *value, void *closure) {
   if (uo==Py_None) uo=NULL; else ub=PyFloat_AsDouble(uo);
   if (PyErr_Occurred()) return -1;
   
-  if (!lo && !uo)	bounder(LP, i, LPX_FR, 0.0, 0.0);
-  else if (!uo)		bounder(LP, i, LPX_LO, lb, 0.0);
-  else if (!lo)		bounder(LP, i, LPX_UP, 0.0, ub);
-  else if (lb<=ub)	bounder(LP, i, lb==ub ? LPX_FX : LPX_DB, lb, ub);
+  if (!lo && !uo)	bounder(LP, i, GLP_FR, 0.0, 0.0);
+  else if (!uo)		bounder(LP, i, GLP_LO, lb, 0.0);
+  else if (!lo)		bounder(LP, i, GLP_UP, 0.0, ub);
+  else if (lb<=ub)	bounder(LP, i, lb==ub ? GLP_FX : GLP_DB, lb, ub);
   else {
     PyErr_SetString(PyExc_ValueError, "lower bound cannot exceed upper bound");
     return -1;
@@ -271,7 +302,7 @@ static int Bar_setbounds(BarObject *self, PyObject *value, void *closure) {
 
 static PyObject* Bar_getnumnonzero(BarObject *self, void *closure) {
   if (!Bar_Valid(self, 1)) return NULL;
-  return PyInt_FromLong((Bar_Row(self) ? lpx_get_mat_row : lpx_get_mat_col)
+  return PyInt_FromLong((Bar_Row(self) ? glp_get_mat_row : glp_get_mat_col)
 			(LP, Bar_Index(self)+1, NULL, NULL));
 }
 
@@ -289,17 +320,50 @@ static PyObject* Bar_getiscol(BarObject *self, void *closure) {
   return PyBool_FromLong(!(Bar_Row(self)));
 }
 
+static PyObject* Bar_getscale(BarObject *self, void *closure) {
+  if (!Bar_Valid(self, 1)) return NULL;
+  int index;
+  double scale;
+  index = Bar_Index(self);
+  scale = (Bar_Row(self) ? glp_get_rii : glp_get_sjj)(LP,index+1);
+  return PyFloat_FromDouble(scale);
+}
+
+static int Bar_setscale(BarObject *self, PyObject *value, void *closure){
+  if (!Bar_Valid(self, 1)) return -1;
+  if (value==NULL) {
+    PyErr_SetString(PyExc_AttributeError, "cannot delete scale");
+    return -1;
+  }
+  if (PyNumber_Check(value)) {
+    int index;
+    double scale;
+    index = Bar_Index(self);
+    scale = PyFloat_AsDouble(value);
+    if (PyErr_Occurred()) return -1;
+    if (scale <= 0.0) {
+      PyErr_SetString(PyExc_ValueError, "scale factors must be positive");
+      return -1;
+    }
+    (Bar_Row(self) ? glp_set_rii : glp_set_sjj)(LP, index+1, scale);
+  } else {
+    PyErr_SetString(PyExc_TypeError, "scale factors must be numeric");
+    return -1;
+  }
+  return 0;
+}
+
 static PyObject* Bar_getstatus(BarObject *self, void *closure) {
   if (!Bar_Valid(self, 1)) return NULL;
   int index, status;
   index = Bar_Index(self);
-  status = (Bar_Row(self) ? lpx_get_row_stat : lpx_get_col_stat)(LP,index+1);
+  status = (Bar_Row(self) ? glp_get_row_stat : glp_get_col_stat)(LP,index+1);
   switch (status) {
-  case LPX_BS: return PyString_FromString("bs");
-  case LPX_NL: return PyString_FromString("nl");
-  case LPX_NU: return PyString_FromString("nu");
-  case LPX_NF: return PyString_FromString("nf");
-  case LPX_NS: return PyString_FromString("ns");
+  case GLP_BS: return PyString_FromString("bs");
+  case GLP_NL: return PyString_FromString("nl");
+  case GLP_NU: return PyString_FromString("nu");
+  case GLP_NF: return PyString_FromString("nf");
+  case GLP_NS: return PyString_FromString("ns");
   default:
     PyErr_Format(PyExc_RuntimeError, "unknown status %d detected", status);
     return NULL;
@@ -319,11 +383,11 @@ static int Bar_setstatus(BarObject *self, PyObject *value, void *closure) {
   }
   int status;
   // Whee...
-  if      (!strncmp("bs", sstr, 2)) status=LPX_BS;
-  else if (!strncmp("nl", sstr, 2)) status=LPX_NL;
-  else if (!strncmp("nu", sstr, 2)) status=LPX_NU;
-  else if (!strncmp("nf", sstr, 2)) status=LPX_NF;
-  else if (!strncmp("ns", sstr, 2)) status=LPX_NS;
+  if      (!strncmp("bs", sstr, 2)) status=GLP_BS;
+  else if (!strncmp("nl", sstr, 2)) status=GLP_NL;
+  else if (!strncmp("nu", sstr, 2)) status=GLP_NU;
+  else if (!strncmp("nf", sstr, 2)) status=GLP_NF;
+  else if (!strncmp("ns", sstr, 2)) status=GLP_NS;
   else {
     PyErr_Format
       (PyExc_ValueError, "status string value '%s' unrecognized", sstr);
@@ -336,14 +400,15 @@ static int Bar_setstatus(BarObject *self, PyObject *value, void *closure) {
 
 static PyObject* Bar_getkind(BarObject *self, void *closure) {
   PyObject *retval=NULL;
-  int kind = LPX_CV;
+  int kind = GLP_CV;
   if (!Bar_Valid(self, 1)) return NULL;
-  if (!Bar_Row(self) && lpx_get_class(LP)==LPX_MIP) {
-    kind = lpx_get_col_kind(LP, Bar_Index(self)+1);
+  if (!Bar_Row(self)) {
+    kind = glp_get_col_kind(LP, Bar_Index(self)+1);
   }
   switch (kind) {
-  case LPX_CV: retval = (PyObject*)&PyFloat_Type; break;
-  case LPX_IV: retval = (PyObject*)&PyInt_Type;   break;
+  case GLP_CV: retval = (PyObject*)&PyFloat_Type; break;
+  case GLP_IV: retval = (PyObject*)&PyInt_Type;   break;
+  case GLP_BV: retval = (PyObject*)&PyBool_Type;  break;
   default:
     PyErr_SetString(PyExc_RuntimeError,
 		    "unexpected variable kind encountered");
@@ -353,40 +418,41 @@ static PyObject* Bar_getkind(BarObject *self, void *closure) {
   return retval;
 }
 static int Bar_setkind(BarObject *self, PyObject *value, void *closure) {
-  if (value==(PyObject*)&PyInt_Type) {
-#if GLPK_VERSION(4, 19)
-    // No test necessary.
-#else
-    if (lpx_get_class(LP)!=LPX_MIP) {
-      PyErr_SetString(PyExc_ValueError, "cannot assign int type "
-		      "to variables in continuous problem");
-      return -1;
-    }
-#endif
+  if (value==(PyObject*)&PyFloat_Type) {
+    // Float indicates a continuous variables.
+    if (Bar_Row(self)) return 0;
+    glp_set_col_kind(LP, Bar_Index(self)+1, GLP_CV);
+    return 0;
+  } else if (value==(PyObject*)&PyInt_Type) {
+    // Integer indicates an integer variable.
     if (Bar_Row(self)) {
       PyErr_SetString(PyExc_ValueError, "row variables cannot be integer");
       return -1;
     }
-    lpx_set_col_kind(LP, Bar_Index(self)+1, LPX_IV);
+    glp_set_col_kind(LP, Bar_Index(self)+1, GLP_IV);
     return 0;
-  }
-  if (value==(PyObject*)&PyFloat_Type) {
-    if (!Bar_Row(self) && lpx_get_class(LP)==LPX_MIP) {
-      lpx_set_col_kind(LP, Bar_Index(self)+1, LPX_CV);
+  } else if (value==(PyObject*)&PyBool_Type) {
+    // Boolean indicates a binary variable.
+    if (Bar_Row(self)) {
+      PyErr_SetString(PyExc_ValueError, "row variables cannot be binary");
+      return -1;
     }
+    glp_set_col_kind(LP, Bar_Index(self)+1, GLP_BV);
     return 0;
+  } else {
+    PyErr_SetString(PyExc_ValueError,
+		    "either the type float, int, or bool is required");
+    return -1;
   }
-  PyErr_SetString(PyExc_ValueError,"either the type float or int is required");
-  return -1;
 }
 
 /****************** THE DUAL/PRIMAL GETTING CODE **********/
 
 // Indexed by (last_solver*4 + isdual*2 + isrow)
-static double(*rowcol_primdual_funcptrs[])(LPX*,int) = {
-  lpx_get_col_prim, lpx_get_row_prim, lpx_get_col_dual, lpx_get_row_dual,
-  lpx_ipt_col_prim, lpx_ipt_row_prim, lpx_ipt_col_dual, lpx_ipt_row_dual,
-  lpx_mip_col_val,  lpx_mip_row_val,   NULL,            NULL };
+static double(*rowcol_primdual_funcptrs[])(glp_prob*,int) = {
+  glp_get_col_prim, glp_get_row_prim, glp_get_col_dual, glp_get_row_dual,
+  glp_ipt_col_prim, glp_ipt_row_prim, glp_ipt_col_dual, glp_ipt_row_dual,
+  glp_mip_col_val,  glp_mip_row_val,   NULL,            NULL };
 
 static PyObject* Bar_getvarval(BarObject *self, void *closure) {
   if (!Bar_Valid(self, 1)) return NULL;
@@ -401,7 +467,7 @@ static PyObject* Bar_getvarval(BarObject *self, void *closure) {
     return NULL;
   }
   // Get and verify that function pointer.
-  double(*valfunc)(LPX*,int) =
+  double(*valfunc)(glp_prob*,int) =
     rowcol_primdual_funcptrs[last*4 + isdual*2 + isrow];
   if (valfunc==NULL) {
     PyErr_SetString(PyExc_RuntimeError,
@@ -413,21 +479,21 @@ static PyObject* Bar_getvarval(BarObject *self, void *closure) {
 }
 
 static PyObject* Bar_getspecvarval(BarObject *self,
-				   double(*valfuncs[])(LPX*, int)) {
+				   double(*valfuncs[])(glp_prob*, int)) {
   if (!Bar_Valid(self, 1)) return NULL;
-  double(*valfunc)(LPX*, int) = valfuncs[Bar_Row(self) ? 1 : 0];
+  double(*valfunc)(glp_prob*, int) = valfuncs[Bar_Row(self) ? 1 : 0];
   return PyFloat_FromDouble(valfunc(LP, Bar_Index(self)+1));
 }
 
 static PyObject* Bar_getspecvarvalm(BarObject *self,
-				    double(*valfuncs[])(LPX*, int)) {
+				    double(*valfuncs[])(glp_prob*, int)) {
   if (!Bar_Valid(self, 1)) return NULL;
   if (lpx_get_class(LP)!=LPX_MIP) {
     PyErr_SetString(PyExc_TypeError, 
 		    "MIP values require mixed integer problem");
     return NULL;
   }
-  double(*valfunc)(LPX*, int) = valfuncs[Bar_Row(self) ? 1 : 0];
+  double(*valfunc)(glp_prob*, int) = valfuncs[Bar_Row(self) ? 1 : 0];
   return PyFloat_FromDouble(valfunc(LP, Bar_Index(self)+1));
 }
 
@@ -453,6 +519,9 @@ static PyObject* Bar_getspecvarvalm(BarObject *self,
 int Bar_InitType(PyObject *module) {
   int retval;
   if ((retval=util_add_type(module, &BarType))!=0) return retval;
+
+  // These are used in setting the stat
+
   return 0;
 }
 
@@ -468,7 +537,6 @@ static PyGetSetDef Bar_getset[] = {
   {"bounds", (getter)Bar_getbounds, (setter)Bar_setbounds,
    "The lower and upper bounds, where None signifies unboundedness.", NULL},
   {"valid", (getter)Bar_getvalid, (setter)NULL,
-
    "Whether this row or column has a valid index in its LP.", NULL},
   {"matrix", (getter)Bar_getmatrix, (setter)Bar_setmatrix,
    "Non-zero constraint coefficients in this row/column vector\n"
@@ -480,6 +548,16 @@ static PyGetSetDef Bar_getset[] = {
    "Whether this is a row.", NULL},
   {"iscol", (getter)Bar_getiscol, (setter)NULL,
    "Whether this is a column.", NULL},
+
+  {"scale", (getter)Bar_getscale, (setter)Bar_setscale,
+   "The scale for the row or column.  This is a factor which one may\n"
+   "set to improve conditioning in the problem.  Most users will want\n"
+   "to use the LPX.scale() method rather than setting these directly.\n"
+   "The resulting constraint matrix is such that the entry at row i\n"
+   "and column j is (for the purpose of optimization) (ri)*(aij)*(sj)\n"
+   "where ri and sj are the row and column scaling factors, and aij\n"
+   "is the entry of the constraint matrix."
+   , NULL},
 
   {"status", (getter)Bar_getstatus, (setter)Bar_setstatus,
    "Row/column basis status.  This is a two character string with\n"
@@ -520,8 +598,9 @@ static PyGetSetDef Bar_getset[] = {
    (void*)(rowcol_primdual_funcptrs+8)},
 
   {"kind", (getter)Bar_getkind, (setter)Bar_setkind,
-   "Either the type 'float' if this is a continuous variable, or 'int'\n"
-   "if this is an integer variable.", NULL},
+   "Either the type 'float' if this is a continuous variable, 'int'\n"
+   "if this is an integer variable, or 'bool' if this is a binary\n"
+   "variable.", NULL},
 
   {NULL}
 };
@@ -565,7 +644,7 @@ PyTypeObject BarType = {
   /* tp_doc */
   (traverseproc)Bar_traverse,		/* tp_traverse */
   (inquiry)Bar_clear,			/* tp_clear */
-  0,					/* tp_richcompare */
+  (richcmpfunc)Bar_richcompare,		/* tp_richcompare */
   offsetof(BarObject, weakreflist),	/* tp_weaklistoffset */
   0,					/* tp_iter */
   0,					/* tp_iternext */

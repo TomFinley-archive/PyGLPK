@@ -1,11 +1,11 @@
 /**************************************************************************
-Copyright (C) 2007 Thomas Finley, tomf@cs.cornell.edu
+Copyright (C) 2007, 2008 Thomas Finley, tfinley@gmail.com
 
 This file is part of PyGLPK.
 
 PyGLPK is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation; either version 3 of the License, or
 (at your option) any later version.
 
 PyGLPK is distributed in the hope that it will be useful,
@@ -14,8 +14,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with PyGLPK; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with PyGLPK.  If not, see <http://www.gnu.org/licenses/>.
 **************************************************************************/
 
 #include "barcol.h"
@@ -165,7 +164,7 @@ static PyObject *BarCol_add(BarColObject *self, PyObject *args) {
     PyErr_SetString(PyExc_ValueError, "number of added entries must be >0");
     return NULL;
   }
-  n = (BarCol_Rows(self) ? lpx_add_rows : lpx_add_cols)(LP, n)-1;
+  n = (BarCol_Rows(self) ? glp_add_rows : glp_add_cols)(LP, n)-1;
   self->size = -1;
   return PyInt_FromLong(n);
 }
@@ -174,7 +173,7 @@ static PyObject *BarCol_add(BarColObject *self, PyObject *args) {
 
 int BarCol_Size(BarColObject* self) {
   if (self->size < 0)
-    self->size = (BarCol_Rows(self) ? lpx_get_num_rows : lpx_get_num_cols)(LP);
+    self->size = (BarCol_Rows(self) ? glp_get_num_rows : glp_get_num_cols)(LP);
   return self->size;
 }
 
@@ -192,11 +191,10 @@ int BarCol_Index(BarColObject *self, PyObject *obj, int *index, int except){
     *index = i;
     return 0;
   } else if (PyString_Check(obj)) {
-#if GLPK_VERSION(4, 7)
-    lpx_create_index(LP); // No effect if already present.
+    glp_create_index(LP); // No effect if already present.
     char *name = PyString_AsString(obj);
     if (name==NULL) return -1;
-    int i = (BarCol_Rows(self) ? lpx_find_row : lpx_find_col)(LP,name);
+    int i = (BarCol_Rows(self) ? glp_find_row : glp_find_col)(LP,name);
     if (i==0) {
       if (except & 4)
 	PyErr_Format(PyExc_KeyError, "%s named '%s' does not exist",
@@ -205,11 +203,6 @@ int BarCol_Index(BarColObject *self, PyObject *obj, int *index, int except){
     }
     *index = i-1;
     return 0;
-#else
-    PyErr_SetString(PyExc_NotImplementedError,
-		    "index by row/col string name not present till GLPK 4.7");
-    return -1;
-#endif
   }
   if (except & 1)
     PyErr_SetString(PyExc_TypeError, "row/col indices must "
@@ -362,7 +355,7 @@ static int BarCol_ass_subscript(BarColObject *self, PyObject *item,
     for (i=0; i<numtodel; ++i)
       indtodel[i] += 1;
     // Pass it into the appropriate LP deletion routine.
-    (BarCol_Rows(self) ? lpx_del_rows : lpx_del_cols)
+    (BarCol_Rows(self) ? glp_del_rows : glp_del_cols)
       (LP, numtodel, indtodel-1);
     free(indtodel);
     self->size -= numtodel;
@@ -393,6 +386,14 @@ static int BarCol_ass_subscript(BarColObject *self, PyObject *item,
 static int BarCol_ass_item(BarColObject *self, int index, PyObject *v) {
   printf("bc ass item\n");
   return 0;
+}
+
+static PyObject* BarCol_Str(BarColObject *self) {
+  // Returns a string representation of this object.
+  return PyString_FromFormat
+    ("<%s, %s of %s %p>", self->ob_type->tp_name,
+     (BarCol_Rows(self)?"rows":"cols"),
+     LPXType.tp_name, self->py_lp);
 }
 
 /****************** GET-SET-ERS ***************/
@@ -458,7 +459,7 @@ PyTypeObject BarColType = {
   &BarCol_as_mapping,			/* tp_as_mapping*/
   0,					/* tp_hash */
   0,					/* tp_call*/
-  0,					/* tp_str*/
+  (reprfunc)BarCol_Str,			/* tp_str*/
   0,					/* tp_getattro*/
   0,					/* tp_setattro*/
   0,					/* tp_as_buffer*/

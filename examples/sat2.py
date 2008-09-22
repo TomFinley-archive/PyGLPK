@@ -4,7 +4,7 @@ def solve_sat(expression):
     if len(expression)==0: return [] # Trivial case.  Otherwise count vars.
     numvars = max([max([abs(v) for v in clause]) for clause in expression])
     lp = glpk.LPX()                  # Construct an empty linear program.
-    lp.params.msglev = 0             # Stop the annoying output.
+    glpk.env.term_on = False         # Stop the annoying output.
     lp.cols.add(2*numvars)           # As many columns as there are literals.
     for col in lp.cols:              # Literal must be between false and true.
         col.bounds = 0.0, 1.0
@@ -22,7 +22,6 @@ def solve_sat(expression):
     assert retval == None            # Should not fail in this fashion.
     if lp.status!='opt': return None # If no relaxed solution, no exact sol.
 
-    lp.kind = int                    # Set kind to MIP problem
     for col in lp.cols:
         col.kind = int
     retval = lp.integer()            # Try to solve this integer problem.

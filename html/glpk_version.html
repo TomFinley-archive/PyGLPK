@@ -14,48 +14,59 @@
 
 <p>When building PyGLPK, certain functions will be disabled depending on what version of GLPK the build process believes it is using.  Below is a list of GLPK versions, and descriptions of what functionality will not work in earlier versions.  (Or, in some cases, later versions.)</p>
 
-<p>The examples use a hypothetical <code>glpk.LPX</code> instance named <code>lp</code> for illustrative purposes.</p>
+<p>The examples may use a hypothetical <code>glpk.LPX</code> instance named <code>lp</code> for illustrative purposes.</p>
 
-
-<h3>GLPK 4.15</h3>
-<ul>
-<li><strong>Removal</strong> of the ability to read and write GNU LP problem descriptions, <code>glpk.LPX(glp='filename')</code> and <code>lp.write(glp='filename')</code> (owing to removal of C routines <code>lpx_read_prob</code> and <code>lpx_write_prob</code>)</li>
+<h3>GLPK 4.39</h3>
+<ul>The interior point solver often does not detect infeasibility on infeasible problems.</li>
 </ul>
 
-<h3>GLPK 4.13</h3>
-<ul>
-<li>The exact simplex solver, <code>lp.exact()</code> (owing to introduction of C routine <code>lpx_exact</code>)</li>
+<h3>GLPK 4.38</h3>
+<ul>The interior point solver often crashes on infeasible problems.</li>
 </ul>
 
-<h3>GLPK 4.10</h3>
+<h3>GLPK 4.37 and higher</h3>
 <ul>
-<li>The Bixby basis routine, <code>lp.cpx_basis()</code> (owing to introduction of C routine <code>lpx_cpx_basis</code>)</li>
+<li>On OS X, the build of the shared library is broken for all versions after and including GLPK 4.37.</li>
 </ul>
 
-<h3>GLPK 4.9</h3>
+<h3>GLPK 4.33</h3>
 <ul>
-<li>The advanced integer solver, <code>lp.intopt()</code> (owing to introduction of C routine <code>lpx_intopt</code>)</li>
-<li>The integer optimality condition checker, <code>lp.kktint()</code> (owing to introduction of C routine <code>lpx_check_int</code>)</li>
+<li>This release had a bug in the integer-solver routines that make parameters cause GLPK to crash.  This was fixed in subsequent versions</li>
 </ul>
 
-<h3>GLPK 4.7</h3>
+<h3>GLPK 4.31</h3>
 <ul>
-<li>Indexing rows and columns by their names (owing to introduction of C routines <code>lpx_create_index</code>, <code>lpx_find_row</code>, <code>lpx_find_col</code>, and <code>lpx_delete_index</code>), though one can always name rows and columns</li>
-<li>The integer optimality condition checker, <code>lp.kktint()</code> (owing to introduction of C routine <code>lpx_check_int</code>)</li>
-<li>Ability to read and write free MPS problem descriptions, <code>glpk.LPX(freemps='filename')</code> and <code>lp.write(freemps='filename')</code> (owing to introduction of C routines <code>lpx_read_freemps</code> and <code>lpx_write_freemps</code>)</li>
+<li>Addition of a <code>LPX.DUAL</code> constant for the <code>meth</code> keyword parameter of the <code>LPX.simplex</code> solver method.</li>
+<li>Addition of the <code>LPX.SF_GM</code>, <code>LPX.SF_EQ</code>, <code>LPX.SF_2N</code>, <code>LPX.SF_SKIP</code>, and <code>LPX.SF_AUTO</code> constants, for the <code>LPX.scale</code> method's argument.</li>
 </ul>
 
-<h3>GLPK 4.6</h3>
+<h3>GLPK 4.23</h3>
 <ul>
-<li>Ability to read and write GNU LP problem descriptions, <code>glpk.LPX(glp='filename')</code> and <code>lp.write(glp='filename')</code> (owing to introduction of C routines <code>lpx_read_prob</code> and <code>lpx_write_prob</code>)</li>
+<li>Addition of the <code>gmi_cuts</code> keyword parameter for the <code>LPX.integer</code> solver.
 </ul>
 
-<h3>GLPK 4.4</h3>
+<h3>GLPK 4.23</h3>
 <ul>
-<li>At this point there was a major reorganization of GLPK.  Versions prior to GLPK 4.4 to are incompatible with PyGLPK.</li>
+<li>Addition of the <code>mir_cuts</code> keyword parameter for the <code>LPX.integer</code> solver.
+</ul>
+
+<h3>GLPK 4.21</h3>
+<ul>
+<li>The ability of the <code>LPX.integer</code> callback to have <code>select</code>, <code>prepro</code>, and <code>branch</code> methods called by the callback procedure.  For the same reasons, the <code>Tree</code> methods <code>select</code>, <code>can_branch</code>, and <code>branch_upon</code> do not appear until this version.</li>
+<li>Addition of the <code>pp_tech</code> keyword parameter for the <code>LPX.integer</code> solver, and associated constants.
+</ul>
+
+<h3>GLPK 4.20</h3>
+<ul>
+<li>The keyword parameters of the <code>LPX.integer</code> MIP solver method including callbacks, and associated constants for the many keyword parameters, as well as all types associated therein, most notably <code>Tree</code> and <code>TreeNode</code>.</li>
+</ul>
+
+<h3>GLPK 4.19</h3>
+<ul>
+<li>The <code>Environment.mem_limit</code> attribute for setting the maximum number of megabytes the GLPK will allocate.</li>
 </ul>
 
 <hr/>
-Thomas Finley, 2007
+Thomas Finley, 2007, 2008
 </body>
 </html>
