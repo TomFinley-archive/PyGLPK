@@ -1,10 +1,11 @@
-VERSION := 0.3
+VERSION := 0.4
 PYTHON := python
 MODNAME := glpk
 ARCHIVE := py$(MODNAME)-$(VERSION)
 CURDIR := $(shell pwd)
 
-.PHONY : all test install clean cleaner archive syncto syncfrom valgrinder docs
+.PHONY : all test install clean cleaner archive syncto syncfrom valgrinder docs local% testlocal%
+.PRECIOUS : locals/%
 
 glpk.so: all
 
@@ -49,15 +50,7 @@ RELEASE.txt: html/release.html
 
 docs: html/glpk.html README.txt RELEASE.txt
 
-# Functions for remote synchronization of this project, mostly for
-# backup purposes.
-
-REMOTE := tomf@kodiak.cs.cornell.edu:glpk/
-
-syncto:
-	rsync -rvtu --exclude 'build' --exclude '*~' --exclude "locals" --exclude "glpk" * "$(REMOTE)"
-syncfrom:
-	rsync -rvtu "$(REMOTE)[^b]*" .
+# Memory leak debug.
 
 valgrinder2:
 	valgrind --tool=memcheck --leak-check=yes --db-attach=yes --show-reachable=yes --suppressions=valgrind-python.supp $(PYTHON) -i test2.py
@@ -72,11 +65,12 @@ glpk/glpk-4.%: glpk/glpk-4.%.tar.gz
 
 locals/%: glpk/glpk-%
 	cd glpk/glpk-$* ; ./configure --prefix=$(CURDIR)/locals/$* ; make -j 8 CFLAGS=-m32 LDFLAGS=-m32 install
+	cd $@/lib; ln -sf libglpk.dylib libglpk.42.dylib
 
 local% : locals/4.%
 	$(PYTHON) setup.py build glpver=$*
 	rm -f $(MODNAME).so
-	ln -s build/lib.*/$(MODNAME).so
+	ln -sf build/lib.*/$(MODNAME).so
 
 testlocal% :
 	make clean

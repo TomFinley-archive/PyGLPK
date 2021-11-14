@@ -1000,7 +1000,7 @@ def branch(self, tree):
 
 <p>Modification of the underlying LPX object is an important part of the callback procedures, especially in the <code>rowgen</code>, <code>cutgen</code>, and <code>prepro</code> methods.  It is important to note that not all operations you may perform on LPX objects within this callback are necessarily safe: modifying the problem object out from under the procedure in the middle of optimization might cause problems.  However, it is difficult to distinguish a "problematic" change versus one which is helpful for, say, preprocessing, or computing cuts, or what have you.</p>
 
-<p>In order to aid ease of use, the PyGLPK implements "generic" solution retrieval methods.  For instance, an LP potentially has multiple objective function values: one for the last simplex solution <code>lp.obj.value_s</code>, one for the last interior point solution <code>lp.obj.value_i</code>, and one for the last MIP solution <code>lp.obj.value_m</code>.  However, there is also a <code>lp.obj.value</code>, which sensibly supposes that a user is interested in the solution the solver (which covers the vast majority of use cases).  However, in the midst of integer solution, the MIP solver hasn't yet become the "last" solver, so be sure to be explicit when retrieving values of columns and objective function values.</p>
+<p>In order to aid ease of use in most cases, the PyGLPK implements "generic" solution retrieval methods.  For instance, an LP potentially has multiple objective function values: one for the last simplex solution <code>lp.obj.value_s</code>, one for the last interior point solution <code>lp.obj.value_i</code>, and one for the last MIP solution <code>lp.obj.value_m</code>.  However, there is also a <code>lp.obj.value</code>, which sensibly supposes that a user is interested in the solution the solver (which covers the vast majority of use cases).  However, in the midst of integer solution, the MIP solver hasn't completed, and so has not yet become the "last" solver, so be sure to be explicit when retrieving values of columns and objective function values.</p>
 
 <pre class="c">
 glp_prob *lp = glp_ios_get_prob(tree);
@@ -1018,7 +1018,8 @@ lp = tree.lp
 glp_ios_can_branch(tree, 5+1);
 glp_ios_branch_upon(tree, 5+1, 'D');
 double *values;
-glp_ios_heur_sol(tree, values)
+glp_ios_heur_sol(tree, values);
+ios_feas_pump(tree);
 glp_ios_select_node(tree, node_num);
 glp_ios_terminate(tree);
 </pre>
@@ -1027,6 +1028,7 @@ glp_ios_terminate(tree);
 tree.can_branch(5)
 tree.branch_upon(5, 'D')
 tree.heuristic(values)
+tree.feasibility_pump()
 tree.select(node)
 tree.terminate()
 </pre>

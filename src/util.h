@@ -41,7 +41,6 @@ typedef intobjargproc ssizeobjargproc;
 
 #define GLPK_VERSION(MA, MI) ((MA)<GLP_MAJOR_VERSION || (MA)==GLP_MAJOR_VERSION && (MI)<=GLP_MINOR_VERSION)
 
-
 /* If "ob" is iterable. Returns 0 on failure with an appropriate
    exception set, 1 on success.
 */

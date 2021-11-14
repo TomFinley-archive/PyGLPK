@@ -47,4 +47,24 @@ int Tree_InitType(PyObject *module);
 
 #endif // GLPK_VERSION(4, 20)
 
+#if GLPK_VERSION(4, 32)
+
+#define RowAttr_Check(op) PyObject_TypeCheck(op, &RowAttrType)
+
+typedef struct {
+  PyObject_HEAD
+  glp_attr attr;
+  PyObject *weakreflist; // Weak reference list.
+} RowAttrObject;
+
+extern PyTypeObject RowAttrType;
+
+/* Returns a new RowAttr object. */
+RowAttrObject *RowAttr_New(void);
+
+/* Init the type and related types it contains. 0 on success. */
+int RowAttr_InitType(PyObject *module);
+
+#endif // GLPK_VERSION(4, 32)
+
 #endif // _TREE_H

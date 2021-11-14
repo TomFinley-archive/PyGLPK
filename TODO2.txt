@@ -1,0 +1,117 @@
+4.32 --
+BRANCH & CUT ENHANCEMENTS
+glp_ios_row_attr -- implement as Tree.row_attr (DONE)
+glp_ios_pool_size -- as Tree.pool_size (DONE)
+glp_ios_add_row -- as Tree.add_row (DONE)
+glp_ios_del_row -- as Tree.del_row (DONE)
+
+-----------(test code for the above is simply functional to ensure no crashes, does not test error conditions yet?  also no practical usage tests)
+
+glp_intopt -- Has the following enhancements across these versions.
+fp_heur : 4.37
+cov_cuts : 4.32
+clq_cuts : 4.32
+mip_gap : 4.32
+presolve : 4.32
+binarize : 4.32
+br_tech , addition of BR_PCH : 4.40
+
+------------tests done
+
+4.33 --
+**glp_copy_prob -- unclear what the appeal is, maybe a cloning method... (NOT INCORPORATED (yet?))
+glp_exact -- exact solver updated to accept params (DONE)
+glp_interior -- accept params and handles different method of returning status after 4.38 (DONE, up to 4.38)
+-------------make some tests for the parameterizations of these
+glp_get_unbnd_ray -- switch to avoid deprecation (DONE)
+
+There are a bunch of mpl MathProg functions ... is there a demand for a python interface for these?  Not clear what the point is for abstractions on top of abstractions?  Anyway, not done.
+
+4.34 --
+Seems like a bugfix release, save for some MathProg functions.
+
+4.35 --
+Graphing routines, these seem like nice additions... otherwise no changes. (NOT INCORPORATED YET)
+
+glp_create_graph
+glp_set_graph_name
+glp_add_vertices
+glp_add_arc
+glp_erase_graph
+glp_delete_graph
+glp_read_mincost
+glp_write_mincost
+glp_mincost_lp
+glp_netgen
+glp_gridgen
+glp_read_maxflow
+glp_write_maxflow
+glp_maxflow_lp
+glp_rmfgen
+
+4.36 --
+Graph flow routines, otherwise no changes (NI)
+glp_mincost_okalg
+glp_maxflow_ffalg
+
+4.37 --
+iocp.fp_heur  : (DONE)
+_glp_check_kkt : Am I supposed to do this?
+
+Graph connected component routines (NI)
+glp_weak_comp
+glpk_strong_comp
+
+4.38 --
+glp_interior now parameterizable via glp_iptcp, much related work (DONE)
+
+4.39 --
+
+Yet more reading/writing data techniques?
+
+"New API routines glp_check_asnprob, glp_asnprob_lp, glp_asnprob_okalg, and glp_asnprob_hall were added." -- not documented anywhere, what do they do?
+
+glp_warm_up : Never even used lpx_warm_up, not sure if it's appropriate.
+
+4.40 --
+More graph related code (NI)
+glp_del_vertices
+glp_del_arc
+
+iocp.br_tech : new parameter to mip solver (DONE)
+
+4.41 --
+glp_transform_row, glp_transform_col, glp_prim_rtest, glp_dual_rtest : I didn't do the tableau stuff in my first versions since I thought someone trying to implement simplex with GLPK would *not* be using Python.  Still pretty sure about that.  Just noting (DNI)
+
+glp_time : not appropriate or necessary given that we're in Python (DNI)
+
+4.42 --
+glp_check_dup : My preprocessing when I interpret the Python object already does this. (DNI)
+glp_sort_matrix : A sort of reconsolidation of the linked lists. (DONE, as lp.sort())
+glp_read_prob : more serialization crap? (NI)
+glp_write_prob : still (NI)
+glp_analyze_bound, glp_analyze_coef : Still more tableau stuff?  Not sure what the point is here. (DNI)
+glp_print_ranges : post mortem of solution I guess? (NI)
+
+Recognition of special filenames "/dev/stdin", "/dev/stdout", and "/dev/stderr" was added : maybe I should change the serialization stuff so that sys.stdout, etc., get properly mapped?  Does anyone care?  (NI)
+
+4.43 --
+
+glp_init_env : Not sure of the necessity? (DNI)
+glp_free_env : Not sure when using this would be appropriate. (DNI)
+glp_open_tee : Hmmm.  If someone asks I'll do it.  (DNI)
+glp_close_tee : Same of course (DNI)
+glp_error : Ugh, GLPKs stupid hard fails make me angry (DNI)
+glp_difftime : Again, not necessary or appropriate given that we're using python. (DNI)
+
+Graph routine for topological sort!!
+glp_top_sort : (NI)
+
+4.44 --
+
+Critical path problem for graphs
+glp_cpp : (NI)
+
+4.45 --
+
+Bug fix release

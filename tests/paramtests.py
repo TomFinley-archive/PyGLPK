@@ -426,6 +426,7 @@ class IntegerControlParametersTestCase(Runner, unittest.TestCase):
     are not really tested since GLPK 4.33 appears to be seriously broken
     with respect to parameter setting."""
     def setUp(self):
+        self.badargs = "foo", {"bar":"biz"}, set("baz"), complex(2,3)
         lp = self.lp = LPX()
         lp.rows.add(2)
         lp.cols.add(2)
@@ -467,14 +468,16 @@ class IntegerControlParametersTestCase(Runner, unittest.TestCase):
     def testBranchingTechnique(self):
         """Test the br_tech parameter."""
         if env.version==(4,33): return
-        legals=LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH
+        legals=[LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH]
+        if env.version>=(4,40):legals.append(LPX.BR_PCH)
         for p in legals:
             self.lp.integer(br_tech=p)
 
     def testBranchingTechniqueValueErrors(self):
         """Test whether illegal values for br_tech throw exceptions."""
-        self.runValueErrorTest("br_tech", [
-            LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH])
+        legals=[LPX.BR_FFV, LPX.BR_LFV, LPX.BR_MFV, LPX.BR_DTH]
+        if env.version>=(4,40):legals.append(LPX.BR_PCH)
+        self.runValueErrorTest("br_tech", legals)
 
     def testBacktrackingTechnique(self):
         """Test the bt_tech parameter."""
@@ -503,29 +506,48 @@ class IntegerControlParametersTestCase(Runner, unittest.TestCase):
 
     def testGomorysMixedCuts(self):
         """Test the gmi_cuts option."""
-        if env.version<(4,24) or env.version==(4,33): return
-        legals=True, False
-        for p in legals:
-            self.lp.integer(gmi_cuts=p)
-
-    def testGomorysMixedCutsTypeErrors(self):
-        """Test whether illegal types for gmi_cuts throw exceptions."""
-        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
-            self.assertRaises(TypeError, self.runner,
-                              "self.lp.integer(gmi_cuts=%r)"%p)
+        self.templateTestTrueFalse(
+            'gmi_cuts', lambda v:v>=(4,23) and v!=(4,33))
 
     def testMixedIntegerRoundingCuts(self):
         """Test the mir_cuts option."""
-        if env.version<(4,23) or env.version==(4,33): return
-        legals=True, False
-        for p in legals:
-            self.lp.integer(mir_cuts=p)
+        self.templateTestTrueFalse(
+            'mir_cuts', lambda v:v>=(4,23) and v!=(4,33))
 
-    def testMixedIntegerRoundingCutsTypeErrors(self):
-        """Test whether illegal types for mir_cuts throw exceptions."""
-        for p in ("foo", {"bar":"biz"}, set("baz"), complex(2,3)):
+    def testFeasibilityPumpHeuristic(self):
+        """Test the fp_heur option."""
+        self.templateTestTrueFalse(
+            'fp_heur', lambda v:v>=(4,37))
+
+    def testMixedCoverCuts(self):
+        """Test the cov_cuts option."""
+        self.templateTestTrueFalse(
+            'cov_cuts', lambda v:v>=(4,32) and v!=(4,33))
+
+    def testCliqueCoverCuts(self):
+        """Test the clq_cuts option."""
+        self.templateTestTrueFalse(
+            'clq_cuts', lambda v:v>=(4,32) and v!=(4,33))
+
+    def testPresolveOption(self):
+        """Test the presolve option."""
+        self.templateTestTrueFalse(
+            'presolve', lambda v:v>=(4,32) and v!=(4,33))
+
+    def testBinarizeOption(self):
+        """Test the binarize option."""
+        self.templateTestTrueFalse(
+            'binarize', lambda v:v>=(4,32) and v!=(4,33))
+
+    def templateTestTrueFalse(self, paramname, versiontest=None):
+        """If versiontest() does not return true, then ignore this test."""
+        if not versiontest or not versiontest(env.version): return
+        legals = True, False
+        for p in legals:
+            self.lp.integer(**{paramname:p})
+        for p in self.badargs:
             self.assertRaises(TypeError, self.runner,
-                              "self.lp.integer(mir_cuts=%r)"%p)
+                              "self.lp.integer(%s=%r)"%(paramname, p))
 
     def testToleranceIntegerFeasible(self):
         """Test the tol_int option."""
@@ -552,6 +574,20 @@ class IntegerControlParametersTestCase(Runner, unittest.TestCase):
         for p in (-1, -1e6, 0, 1, 1e1, 1e5):
             self.assertRaises(ValueError, self.runner,
                               "self.lp.integer(tol_obj=%g)"%p)
+
+    def testMIPGapTolerance(self):
+        """Test the mip_gap option."""
+        if env.version<(4,32) or env.version==(4,33): return
+        legals = 0, 0.5, 1, 2, 5
+        for p in legals:
+            self.lp.integer(mip_gap=p)
+
+    def testMIPGapToleranceValueErrors(self):
+        """Test whether illegal values for mip_gap throw exceptions."""
+        if env.version<(4,32) or env.version==(4,33): return
+        for p in (-0.25, -1, -3):
+            self.assertRaises(ValueError, self.runner,
+                              "self.lp.integer(mip_gap=%g)"%p)
 
     def testTimeLimit(self):
         """Test the tm_lim parameter."""

@@ -35,6 +35,7 @@ distribution.</tt></p>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#LPX">LPX</a>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#Objective">Objective</a>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#ObjectiveIter">ObjectiveIter</a>
+</font></dt><dt><font face="helvetica, arial"><a href="glpk.html#RowAttr">RowAttr</a>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#Tree">Tree</a>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#TreeIter">TreeIter</a>
 </font></dt><dt><font face="helvetica, arial"><a href="glpk.html#TreeNode">TreeNode</a>
@@ -378,7 +379,7 @@ are:<br>
 &nbsp;&nbsp;cols&nbsp;&nbsp;&nbsp;&nbsp;Same,&nbsp;but&nbsp;for&nbsp;columns.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="LPX-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;x.__class__.__doc__&nbsp;for&nbsp;signature</tt></dd></dl>
+<dl><dt><a name="LPX-__init__"><strong>__init__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__init__">__init__</a>(...)&nbsp;initializes&nbsp;x;&nbsp;see&nbsp;help(type(x))&nbsp;for&nbsp;signature</tt></dd></dl>
 
 <dl><dt><a name="LPX-__repr__"><strong>__repr__</strong></a>(...)</dt><dd><tt>x.<a href="#LPX-__repr__">__repr__</a>()&nbsp;&lt;==&gt;&nbsp;repr(x)</tt></dd></dl>
 
@@ -403,9 +404,21 @@ pp.&nbsp;267-84.</tt></dd></dl>
 Erase&nbsp;the&nbsp;content&nbsp;of&nbsp;this&nbsp;problem,&nbsp;restoring&nbsp;it&nbsp;to&nbsp;the&nbsp;state<br>
 it&nbsp;was&nbsp;in&nbsp;when&nbsp;it&nbsp;was&nbsp;first&nbsp;created.</tt></dd></dl>
 
-<dl><dt><a name="LPX-exact"><strong>exact</strong></a>(...)</dt><dd><tt><a href="#LPX-exact">exact</a>()<br>
+<dl><dt><a name="LPX-exact"><strong>exact</strong></a>(...)</dt><dd><tt><a href="#LPX-exact">exact</a>([keyword&nbsp;arguments])<br>
 &nbsp;<br>
 Attempt&nbsp;to&nbsp;solve&nbsp;the&nbsp;problem&nbsp;using&nbsp;an&nbsp;exact&nbsp;simplex&nbsp;method.<br>
+&nbsp;<br>
+This&nbsp;procedure&nbsp;uses&nbsp;some&nbsp;keyword&nbsp;arguments.<br>
+msg_lev&nbsp;:&nbsp;Controls&nbsp;the&nbsp;message&nbsp;level&nbsp;of&nbsp;terminal&nbsp;output.<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.MSG_OFF&nbsp;--&nbsp;no&nbsp;output&nbsp;(default)<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.MSG_ERR&nbsp;--&nbsp;error&nbsp;and&nbsp;warning&nbsp;messages<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.MSG_ON&nbsp;&nbsp;--&nbsp;normal&nbsp;output<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.MSG_ALL&nbsp;--&nbsp;full&nbsp;informational&nbsp;output<br>
+ord_alg&nbsp;:&nbsp;Ordering&nbsp;algorithm&nbsp;used&nbsp;prior&nbsp;to&nbsp;Cholesky&nbsp;factorization.<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.ORD_NONE--&nbsp;use&nbsp;natural&nbsp;original&nbsp;ordering<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.ORD_QMD&nbsp;--&nbsp;quotient&nbsp;minimum&nbsp;degree&nbsp;(QMD)<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.ORD_AMD&nbsp;--&nbsp;approximate&nbsp;minimum&nbsp;degree&nbsp;(AMD)<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.ORD_SYMAND&nbsp;--&nbsp;approximate&nbsp;minimum&nbsp;degree&nbsp;(SYMAMD)<br>
 &nbsp;<br>
 This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
 Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
@@ -444,8 +457,11 @@ pp_tech&nbsp;:&nbsp;Preprocessing&nbsp;technique&nbsp;option.<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.PP_NONE&nbsp;--&nbsp;disable&nbsp;preprocessing<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.PP_ROOT&nbsp;--&nbsp;perform&nbsp;preprocessing&nbsp;only&nbsp;on&nbsp;the&nbsp;root&nbsp;level<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.PP_ALL&nbsp;&nbsp;--&nbsp;perform&nbsp;preprocessing&nbsp;on&nbsp;all&nbsp;levels&nbsp;(default)<br>
+fp_heur:&nbsp;Apply&nbsp;the&nbsp;feasibility&nbsp;pump&nbsp;heuristic&nbsp;(default&nbsp;False)<br>
 gmi_cuts:&nbsp;Use&nbsp;Gomory's&nbsp;mixed&nbsp;integer&nbsp;cuts&nbsp;(default&nbsp;False)<br>
 mir_cuts:&nbsp;Use&nbsp;mixed&nbsp;integer&nbsp;rounding&nbsp;cuts&nbsp;(default&nbsp;False)<br>
+cov_cuts:&nbsp;Enable&nbsp;generating&nbsp;mixed&nbsp;cover&nbsp;cuts&nbsp;(default&nbsp;False)<br>
+clq_cuts:&nbsp;Enable&nbsp;generating&nbsp;clique&nbsp;cuts&nbsp;(default&nbsp;False)<br>
 tol_int&nbsp;:&nbsp;Tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;if&nbsp;the&nbsp;optimal&nbsp;solution&nbsp;to&nbsp;the<br>
 &nbsp;&nbsp;current&nbsp;LP&nbsp;relaxation&nbsp;is&nbsp;integer&nbsp;feasible.<br>
 tol_obj&nbsp;:&nbsp;Tolerance&nbsp;used&nbsp;to&nbsp;check&nbsp;if&nbsp;the&nbsp;objective&nbsp;value&nbsp;in&nbsp;the<br>
@@ -457,14 +473,16 @@ out_dly&nbsp;:&nbsp;Terminal&nbsp;output&nbsp;delay&nbsp;in&nbsp;milliseconds.&n
 callback:&nbsp;A&nbsp;callback&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;the&nbsp;user&nbsp;may&nbsp;use&nbsp;to&nbsp;monitor&nbsp;and&nbsp;control<br>
 &nbsp;&nbsp;the&nbsp;solver.&nbsp;&nbsp;During&nbsp;certain&nbsp;portions&nbsp;of&nbsp;the&nbsp;optimization,&nbsp;the<br>
 &nbsp;&nbsp;solver&nbsp;will&nbsp;call&nbsp;methods&nbsp;of&nbsp;callback&nbsp;<a href="__builtin__.html#object">object</a>.&nbsp;(default&nbsp;None)<br>
+presolve:&nbsp;Use&nbsp;the&nbsp;MIP&nbsp;presolver&nbsp;(default&nbsp;False)<br>
+binarize:&nbsp;Replace&nbsp;interger&nbsp;variables&nbsp;with&nbsp;binary&nbsp;ones&nbsp;(default&nbsp;False)<br>
 &nbsp;<br>
 The&nbsp;last&nbsp;parameter,&nbsp;callback,&nbsp;is&nbsp;worth&nbsp;its&nbsp;own&nbsp;discussion.&nbsp;&nbsp;During<br>
 the&nbsp;branch-and-cut&nbsp;algorithm&nbsp;of&nbsp;the&nbsp;MIP&nbsp;solver,&nbsp;at&nbsp;various&nbsp;points<br>
 callback&nbsp;hooks&nbsp;are&nbsp;invoked&nbsp;which&nbsp;allow&nbsp;the&nbsp;user&nbsp;code&nbsp;to&nbsp;influence<br>
 the&nbsp;proceeding&nbsp;of&nbsp;the&nbsp;MIP&nbsp;solver.&nbsp;&nbsp;The&nbsp;user&nbsp;code&nbsp;may&nbsp;influence&nbsp;the<br>
 solver&nbsp;in&nbsp;the&nbsp;hook&nbsp;by&nbsp;modifying&nbsp;and&nbsp;operating&nbsp;on&nbsp;a&nbsp;<a href="#Tree">Tree</a>&nbsp;instance<br>
-passed&nbsp;to&nbsp;the&nbsp;hook.&nbsp;&nbsp;These&nbsp;hooks&nbsp;have&nbsp;various&nbsp;codes,&nbsp;which&nbsp;we&nbsp;list<br>
-here.<br>
+passed&nbsp;as&nbsp;the&nbsp;sole&nbsp;argument&nbsp;to&nbsp;the&nbsp;hook.&nbsp;&nbsp;These&nbsp;hooks&nbsp;have&nbsp;various<br>
+names&nbsp;depending&nbsp;on&nbsp;their&nbsp;function,&nbsp;which&nbsp;we&nbsp;list&nbsp;here.<br>
 &nbsp;&nbsp;&nbsp;&nbsp;select&nbsp;-&nbsp;request&nbsp;for&nbsp;subproblem&nbsp;selection<br>
 &nbsp;&nbsp;&nbsp;&nbsp;prepro&nbsp;-&nbsp;request&nbsp;for&nbsp;preprocessing<br>
 &nbsp;&nbsp;&nbsp;&nbsp;rowgen&nbsp;-&nbsp;request&nbsp;for&nbsp;row&nbsp;generation<br>
@@ -498,16 +516,17 @@ itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
 tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.<br>
 sing&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;Error&nbsp;occurred&nbsp;solving&nbsp;an&nbsp;LP&nbsp;relaxation&nbsp;subproblem.</tt></dd></dl>
 
-<dl><dt><a name="LPX-interior"><strong>interior</strong></a>(...)</dt><dd><tt><a href="#LPX-interior">interior</a>()<br>
+<dl><dt><a name="LPX-interior"><strong>interior</strong></a>(...)</dt><dd><tt><a href="#LPX-interior">interior</a>([keyword&nbsp;arguments])<br>
 &nbsp;<br>
 Attempt&nbsp;to&nbsp;solve&nbsp;the&nbsp;problem&nbsp;using&nbsp;an&nbsp;interior-point&nbsp;method.<br>
 &nbsp;<br>
-This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved.<br>
+This&nbsp;returns&nbsp;None&nbsp;if&nbsp;the&nbsp;problem&nbsp;was&nbsp;successfully&nbsp;solved,&nbsp;though<br>
+it&nbsp;does&nbsp;not&nbsp;necessarily&nbsp;follow&nbsp;that&nbsp;the&nbsp;solution&nbsp;found&nbsp;was<br>
+optimal.&nbsp;&nbsp;Check&nbsp;the&nbsp;'status'&nbsp;attribute&nbsp;to&nbsp;disambiguate.<br>
 Alternately,&nbsp;on&nbsp;failure&nbsp;it&nbsp;will&nbsp;return&nbsp;one&nbsp;of&nbsp;the&nbsp;following<br>
 strings&nbsp;to&nbsp;indicate&nbsp;failure&nbsp;type.<br>
 &nbsp;<br>
-fault&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns.<br>
-nofeas&nbsp;&nbsp;--&nbsp;The&nbsp;problem&nbsp;has&nbsp;no&nbsp;feasible&nbsp;(primal/dual)&nbsp;solution.<br>
+fail&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;There&nbsp;are&nbsp;no&nbsp;rows&nbsp;or&nbsp;columns.<br>
 noconv&nbsp;&nbsp;--&nbsp;Very&nbsp;slow&nbsp;convergence&nbsp;or&nbsp;divergence.<br>
 itlim&nbsp;&nbsp;&nbsp;--&nbsp;Iteration&nbsp;limited&nbsp;exceeded.<br>
 instab&nbsp;&nbsp;--&nbsp;Numerical&nbsp;instability&nbsp;when&nbsp;solving&nbsp;Newtonian&nbsp;system.</tt></dd></dl>
@@ -575,6 +594,7 @@ msg_lev&nbsp;:&nbsp;Controls&nbsp;the&nbsp;message&nbsp;level&nbsp;of&nbsp;termi
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.MSG_ALL&nbsp;--&nbsp;full&nbsp;informational&nbsp;output<br>
 meth&nbsp;&nbsp;&nbsp;&nbsp;:&nbsp;Simplex&nbsp;method&nbsp;option<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.PRIMAL&nbsp;&nbsp;--&nbsp;use&nbsp;two&nbsp;phase&nbsp;primal&nbsp;simplex&nbsp;(default)<br>
+&nbsp;&nbsp;<a href="#LPX">LPX</a>.DUAL&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;use&nbsp;two&nbsp;phase&nbsp;dual&nbsp;simplex<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.DUALP&nbsp;&nbsp;&nbsp;--&nbsp;use&nbsp;two&nbsp;phase&nbsp;dual&nbsp;simplex,&nbsp;primal&nbsp;if&nbsp;that&nbsp;fails<br>
 pricing&nbsp;:&nbsp;Pricing&nbsp;technique<br>
 &nbsp;&nbsp;<a href="#LPX">LPX</a>.PT_STD&nbsp;&nbsp;--&nbsp;standard&nbsp;textbook&nbsp;technique<br>
@@ -614,6 +634,11 @@ tmlim&nbsp;&nbsp;&nbsp;--&nbsp;Time&nbsp;limit&nbsp;exceeded.<br>
 sing&nbsp;&nbsp;&nbsp;&nbsp;--&nbsp;The&nbsp;basis&nbsp;matrix&nbsp;became&nbsp;singular&nbsp;or&nbsp;ill-conditioned.<br>
 nopfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;primal&nbsp;feasible&nbsp;solution.&nbsp;(Presolver&nbsp;only.)<br>
 nodfs&nbsp;&nbsp;&nbsp;--&nbsp;No&nbsp;dual&nbsp;feasible&nbsp;solution.&nbsp;(Presolver&nbsp;only.)</tt></dd></dl>
+
+<dl><dt><a name="LPX-sort"><strong>sort</strong></a>(...)</dt><dd><tt><a href="#LPX-sort">sort</a>()<br>
+&nbsp;<br>
+Performs&nbsp;a&nbsp;reconsolidation&nbsp;and&nbsp;reordering&nbsp;of&nbsp;the&nbsp;internal<br>
+linked&nbsp;lists.</tt></dd></dl>
 
 <dl><dt><a name="LPX-std_basis"><strong>std_basis</strong></a>(...)</dt><dd><tt><a href="#LPX-std_basis">std_basis</a>()<br>
 &nbsp;<br>
@@ -723,6 +748,8 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>BR_MFV</strong> = 3</dl>
 
+<dl><dt><strong>BR_PCH</strong> = 5</dl>
+
 <dl><dt><strong>BT_BFS</strong> = 2</dl>
 
 <dl><dt><strong>BT_BLB</strong> = 3</dl>
@@ -730,6 +757,8 @@ Data and other attributes defined here:<br>
 <dl><dt><strong>BT_BPH</strong> = 4</dl>
 
 <dl><dt><strong>BT_DFS</strong> = 1</dl>
+
+<dl><dt><strong>DUAL</strong> = 3</dl>
 
 <dl><dt><strong>DUALP</strong> = 2</dl>
 
@@ -740,6 +769,14 @@ Data and other attributes defined here:<br>
 <dl><dt><strong>MSG_OFF</strong> = 0</dl>
 
 <dl><dt><strong>MSG_ON</strong> = 2</dl>
+
+<dl><dt><strong>ORD_AMD</strong> = 2</dl>
+
+<dl><dt><strong>ORD_NONE</strong> = 0</dl>
+
+<dl><dt><strong>ORD_QMD</strong> = 1</dl>
+
+<dl><dt><strong>ORD_SYMAMD</strong> = 3</dl>
 
 <dl><dt><strong>PP_ALL</strong> = 2</dl>
 
@@ -757,7 +794,17 @@ Data and other attributes defined here:<br>
 
 <dl><dt><strong>RT_STD</strong> = 17</dl>
 
-<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object at 0x41e360&gt;<dd><tt>T.<a href="#LPX-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
+<dl><dt><strong>SF_2N</strong> = 32</dl>
+
+<dl><dt><strong>SF_AUTO</strong> = 128</dl>
+
+<dl><dt><strong>SF_EQ</strong> = 16</dl>
+
+<dl><dt><strong>SF_GM</strong> = 1</dl>
+
+<dl><dt><strong>SF_SKIP</strong> = 64</dl>
+
+<dl><dt><strong>__new__</strong> = &lt;built-in method __new__ of type object&gt;<dd><tt>T.<a href="#LPX-__new__">__new__</a>(S,&nbsp;...)&nbsp;-&gt;&nbsp;a&nbsp;new&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;with&nbsp;type&nbsp;S,&nbsp;a&nbsp;subtype&nbsp;of&nbsp;T</tt></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -848,6 +895,33 @@ coefficients&nbsp;of&nbsp;the&nbsp;objective&nbsp;function.<br>&nbsp;</tt></td><
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="RowAttr">class <strong>RowAttr</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Row&nbsp;attributes&nbsp;available&nbsp;to&nbsp;callback&nbsp;functions.<br>
+The&nbsp;mixed-integer&nbsp;solver's&nbsp;user&nbsp;callback&nbsp;functionality&nbsp;allows<br>
+the&nbsp;user&nbsp;to&nbsp;find&nbsp;attributes&nbsp;of&nbsp;a&nbsp;particular&nbsp;row&nbsp;in&nbsp;the&nbsp;current<br>
+subproblem.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Data descriptors defined here:<br>
+<dl><dt><strong>klass</strong></dt>
+<dd><tt>The&nbsp;row&nbsp;class&nbsp;descriptor.&nbsp;&nbsp;It&nbsp;can&nbsp;be&nbsp;one&nbsp;of&nbsp;'gmi',&nbsp;'mir',&nbsp;'cov',<br>
+'clq'&nbsp;for&nbsp;Gomery's&nbsp;mixed&nbsp;integer,&nbsp;mixed&nbsp;integer&nbsp;rounding,&nbsp;mixed<br>
+cover,&nbsp;or&nbsp;clique&nbsp;cut&nbsp;(respectively).</tt></dd>
+</dl>
+<dl><dt><strong>level</strong></dt>
+<dd><tt>Subproblem&nbsp;level&nbsp;at&nbsp;which&nbsp;the&nbsp;row&nbsp;was&nbsp;created.<br>
+Level&nbsp;zero&nbsp;indicates&nbsp;it&nbsp;was&nbsp;a&nbsp;row&nbsp;present&nbsp;when&nbsp;the&nbsp;MIP&nbsp;solver<br>
+was&nbsp;invoked.</tt></dd>
+</dl>
+<dl><dt><strong>origin</strong></dt>
+<dd><tt>The&nbsp;row&nbsp;origin&nbsp;flag&nbsp;one&nbsp;of&nbsp;'reg',&nbsp;'lazy',&nbsp;'cut',&nbsp;for&nbsp;regular,<br>
+lazy,&nbsp;or&nbsp;cutting&nbsp;plane&nbsp;constraint.</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="Tree">class <strong>Tree</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -860,6 +934,18 @@ the&nbsp;curr_node&nbsp;member&nbsp;of&nbsp;an&nbsp;instance.<br>&nbsp;</tt></td
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="Tree-__iter__"><strong>__iter__</strong></a>(...)</dt><dd><tt>x.<a href="#Tree-__iter__">__iter__</a>()&nbsp;&lt;==&gt;&nbsp;iter(x)</tt></dd></dl>
+
+<dl><dt><a name="Tree-add_row"><strong>add_row</strong></a>(...)</dt><dd><tt><a href="#Tree-add_row">add_row</a>(rowspec,&nbsp;rhs,&nbsp;islowerbound,[klass=0],[name=None])<br>
+&nbsp;<br>
+Adds&nbsp;a&nbsp;new&nbsp;cutting&nbsp;plane&nbsp;constraint.&nbsp;&nbsp;The&nbsp;argument&nbsp;rowspec&nbsp;is<br>
+a&nbsp;matrix&nbsp;row&nbsp;&nbsp;specification&nbsp;(the&nbsp;same&nbsp;as&nbsp;fed&nbsp;to&nbsp;any&nbsp;<a href="#Bar">Bar</a>.matrix<br>
+<a href="__builtin__.html#object">object</a>,&nbsp;that&nbsp;is,&nbsp;consisting&nbsp;of&nbsp;dense&nbsp;values,&nbsp;or&nbsp;else<br>
+index/value&nbsp;tuples),&nbsp;'rhs'&nbsp;is&nbsp;the&nbsp;right&nbsp;hand&nbsp;side&nbsp;of&nbsp;the<br>
+constraint,&nbsp;and&nbsp;'islowerbound'&nbsp;should&nbsp;be&nbsp;True/False&nbsp;if&nbsp;that<br>
+rhs&nbsp;is&nbsp;a&nbsp;lower/upper&nbsp;bound,&nbsp;respectively.&nbsp;&nbsp;Optional&nbsp;keyword<br>
+argument&nbsp;are&nbsp;'klass'&nbsp;(should&nbsp;be&nbsp;either&nbsp;0,&nbsp;or&nbsp;a&nbsp;number&nbsp;from&nbsp;101<br>
+to&nbsp;200),&nbsp;and&nbsp;'name'&nbsp;to&nbsp;give&nbsp;the&nbsp;row&nbsp;a&nbsp;semantically&nbsp;meaningful<br>
+label.&nbsp;&nbsp;This&nbsp;returns&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;added&nbsp;row.</tt></dd></dl>
 
 <dl><dt><a name="Tree-branch_upon"><strong>branch_upon</strong></a>(...)</dt><dd><tt><a href="#Tree-branch_upon">branch_upon</a>(col_index,&nbsp;select='N')<br>
 &nbsp;<br>
@@ -880,6 +966,14 @@ continue&nbsp;the&nbsp;search&nbsp;with&nbsp;this&nbsp;column's&nbsp;variable&nb
 integer.&nbsp;&nbsp;Note&nbsp;that&nbsp;this&nbsp;function&nbsp;should&nbsp;be&nbsp;called&nbsp;only&nbsp;when<br>
 the&nbsp;reason&nbsp;member&nbsp;of&nbsp;the&nbsp;tree&nbsp;is&nbsp;'branch'.</tt></dd></dl>
 
+<dl><dt><a name="Tree-clear_pool"><strong>clear_pool</strong></a>(...)</dt><dd><tt><a href="#Tree-clear_pool">clear_pool</a>()<br>
+&nbsp;<br>
+Delete&nbsp;all&nbsp;existing&nbsp;cutting&nbsp;plane&nbsp;constraints&nbsp;from&nbsp;the&nbsp;cut&nbsp;pool.</tt></dd></dl>
+
+<dl><dt><a name="Tree-del_row"><strong>del_row</strong></a>(...)</dt><dd><tt><a href="#Tree-del_row">del_row</a>(row_index)<br>
+&nbsp;<br>
+Removes&nbsp;the&nbsp;indicated&nbsp;row&nbsp;from&nbsp;the&nbsp;cut&nbsp;pool.</tt></dd></dl>
+
 <dl><dt><a name="Tree-heuristic"><strong>heuristic</strong></a>(...)</dt><dd><tt><a href="#Tree-heuristic">heuristic</a>(values)<br>
 &nbsp;<br>
 Provide&nbsp;an&nbsp;integer&nbsp;feasible&nbsp;solution&nbsp;of&nbsp;the&nbsp;primal&nbsp;problem,<br>
@@ -890,6 +984,11 @@ solution&nbsp;is&nbsp;accepted&nbsp;and&nbsp;the&nbsp;problem&nbsp;updated.&nbsp
 returns&nbsp;True&nbsp;or&nbsp;False&nbsp;depending&nbsp;on&nbsp;whether&nbsp;the&nbsp;solution&nbsp;was<br>
 accepted&nbsp;or&nbsp;not.&nbsp;&nbsp;Note&nbsp;that&nbsp;this&nbsp;function&nbsp;should&nbsp;be&nbsp;called<br>
 only&nbsp;when&nbsp;the&nbsp;reason&nbsp;member&nbsp;of&nbsp;the&nbsp;tree&nbsp;is&nbsp;'heur'.</tt></dd></dl>
+
+<dl><dt><a name="Tree-row_attr"><strong>row_attr</strong></a>(...)</dt><dd><tt><a href="#Tree-row_attr">row_attr</a>(row_index)<br>
+&nbsp;<br>
+Provides&nbsp;an&nbsp;<a href="__builtin__.html#object">object</a>&nbsp;containing&nbsp;additional&nbsp;attributes&nbsp;of&nbsp;the<br>
+indicated&nbsp;row,&nbsp;a&nbsp;<a href="#RowAttr">RowAttr</a>&nbsp;<a href="__builtin__.html#object">object</a>.</tt></dd></dl>
 
 <dl><dt><a name="Tree-select"><strong>select</strong></a>(...)</dt><dd><tt><a href="#Tree-select">select</a>(node)<br>
 &nbsp;<br>
@@ -938,6 +1037,10 @@ active&nbsp;subproblem&nbsp;in&nbsp;the&nbsp;tree,&nbsp;this&nbsp;is&nbsp;None.<
 </dl>
 <dl><dt><strong>num_total</strong></dt>
 <dd><tt>The&nbsp;total&nbsp;number&nbsp;of&nbsp;nodes,&nbsp;including&nbsp;those&nbsp;already&nbsp;removed.</tt></dd>
+</dl>
+<dl><dt><strong>pool_size</strong></dt>
+<dd><tt>The&nbsp;number&nbsp;of&nbsp;cutting&nbsp;plane&nbsp;constraints&nbsp;in&nbsp;the&nbsp;cut&nbsp;pool.&nbsp;&nbsp;This<br>
+attribute&nbsp;is&nbsp;None&nbsp;except&nbsp;when&nbsp;tree.reason=='cutgen'.</tt></dd>
 </dl>
 <dl><dt><strong>reason</strong></dt>
 <dd><tt>A&nbsp;string&nbsp;with&nbsp;the&nbsp;reason&nbsp;the&nbsp;callback&nbsp;function&nbsp;has&nbsp;been&nbsp;called.</tt></dd>
@@ -1018,5 +1121,5 @@ active&nbsp;subproblem,&nbsp;or&nbsp;if&nbsp;this&nbsp;is&nbsp;not&nbsp;an&nbsp;
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>env</strong> = &lt;glpk.Environment object at 0x380e40&gt;</td></tr></table>
+<td width="100%"><strong>env</strong> = &lt;glpk.Environment object&gt;</td></tr></table>
 </body></html>

@@ -37,6 +37,7 @@ class SimpleSolverTest(unittest.TestCase):
 
     def testInterior(self):
         """Tests solving the simple problem with interior."""
+        if env.version==(4,38): return
         self.lp.interior()
         self.assertAlmostEqual(self.lp.cols['x'].value, 1.0)
         self.assertAlmostEqual(self.lp.cols['y'].value, 0.5)
@@ -123,7 +124,8 @@ class TwoDimensionalTest(unittest.TestCase):
         lp.obj.maximize = True
         # This should fault, since interior point methods need some
         # rows, and some columns.
-        self.assertEqual('fault', lp.interior())
+        self.assertEqual('fail' if env.version>=(4,33) else 'fault',
+                         lp.interior())
         # Now try pushing it into unbounded territory.
         lp.obj[0] = -1
         # Redefine the bounds so it is bounded again.
@@ -132,6 +134,8 @@ class TwoDimensionalTest(unittest.TestCase):
         lp.rows.add(1)
         lp.rows[0].matrix = [-2, 1]
         lp.rows[0].bounds = None, 1
+	if env.version==(4,38): return
+	# In 4.38, the next call will result in an abort trap.
         self.assertEqual(None, lp.interior())
         self.assertEqual('opt', lp.status)
         self.assertAlmostEqual(lp.obj.value, 1.5)
@@ -150,7 +154,11 @@ class TwoDimensionalTest(unittest.TestCase):
         self.assertAlmostEqual(x2.primal, 1.5)
         # Now go for the gusto.  Change column constraint, force infeasibility.
         x2.bounds = 3, None # Instead of x2<=2, must now be >=3!  Tee hee.
-        self.assertEqual('nofeas', lp.interior())
+	if env.version>=(4,38):
+            self.assertEqual(None, lp.interior())
+            self.assertEqual('nofeas', lp.status)
+        else:
+            self.assertEqual('nofeas', lp.interior())
         # By removing the first row constraint, we allow opt point (-1,4).
         del lp.rows[0]
         lp.std_basis()
@@ -474,7 +482,72 @@ class MIPCallbackTest(Runner, unittest.TestCase):
                     n = n.next
                 actives = [n.subproblem for n in tree]
                 testobj.assertEqual(actives, explicit_actives)
-                
+        assign = self.solve_sat(callback=Callback())
 
+    def testCanBranch(self):
+        testobj = self
+        class Callback:
+            def branch(self, tree):
+                tree.can_branch(0)
+        assign = self.solve_sat(callback=Callback())
+
+    if env.version>=(4,32):
+        def testRowAttributes(self):
+            testobj = self
+            class Callback:
+                def default(self, tree):
+                    ra = tree.row_attr(0)
+                    f = ra.klass, ra.level, ra.origin
+            assign = self.solve_sat(callback=Callback())
+
+        def testPoolSize(self):
+            """Tests if pool size is not None during cutgen, None otherwise."""
+            testobj = self
+            class Callback:
+                def cutgen(self, tree):
+                    testobj.assertNotEqual(None, tree.pool_size)
+                def default(self, tree):
+                    testobj.assertEqual(None, tree.pool_size)
+            assign = self.solve_sat(callback=Callback())
+
+        def testAddDelRow(self):
+            testobj = self
+            class Callback:
+                def cutgen(self, tree):
+                    i1 = tree.add_row([1,2,3,4], 5, True)
+                    i2 = tree.add_row([2,3,4,5], 6, False,klass=101,name='Tom')
+                    i3 = tree.add_row([2,3,4,7], 7, False, name='Tom')
+                    testobj.assertEqual(i1+1, i2)
+                    testobj.assertEqual(i2+1, i3)
+                    tree.del_row(i3)
+                    tree.del_row(i2)
+                    tree.del_row(i1)
+            assign = self.solve_sat(callback=Callback())
+
+    def testTreeHeuristic(self):
+        """Tests whether we accept a 'heuristic' (just the solution)."""
+        testobj = self
+
+        def lit2col(lit):
+            if lit>0: return 2*lit-2
+            return 2*(-lit)-1
+
+        correct = 'FFFTTTTFTFTFTTFFFFFTTTFFTTTTTT'
+        class Callback:
+            def __init__(self):
+                self.applied = False
+            def heur(self, tree):
+                if not self.applied:
+                    hh = [0]*len(correct)*2
+                    for w,c in enumerate(correct):
+                        hh[lit2col( w+1)] = int(c=='T')
+                        hh[lit2col(-w-1)] = int(c=='F')
+                    retval = tree.heuristic(hh)
+                    testobj.assertEqual(retval, True)
+                    self.applied = True
+        cb=Callback()
+        assign = self.solve_sat(callback=cb)
+        self.assertEqual(cb.applied, True)
+        
 # Callbacks did not exist prior to 4.20 anyway.
 if env.version<(4,20): del MIPCallbackTest

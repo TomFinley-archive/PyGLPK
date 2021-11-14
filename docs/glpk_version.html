@@ -17,7 +17,7 @@
 <p>The examples may use a hypothetical <code>glpk.LPX</code> instance named <code>lp</code> for illustrative purposes.</p>
 
 <h3>GLPK 4.39</h3>
-<ul>The interior point solver often does not detect infeasibility on infeasible problems.</li>
+<ul>The interior point solver henceforth indicates instability in the interior point solver not by return value, but but status value.</li>
 </ul>
 
 <h3>GLPK 4.38</h3>
@@ -31,7 +31,7 @@
 
 <h3>GLPK 4.33</h3>
 <ul>
-<li>This release had a bug in the integer-solver routines that make parameters cause GLPK to crash.  This was fixed in subsequent versions</li>
+<li>This release had a bug in the integer-solver routines that make parameters cause GLPK to crash.  This was fixed in subsequent versions, though no mention of the bugs was made in the 4.34 release notes.</li>
 </ul>
 
 <h3>GLPK 4.31</h3>

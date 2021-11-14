@@ -396,7 +396,7 @@ static PyObject *Tree_canbranch(TreeObject *self, PyObject *args) {
 		 j, numcols);
     return NULL;
   }
-  if (glp_ios_can_branch(TREE, j)) Py_RETURN_TRUE; else Py_RETURN_FALSE;
+  if (glp_ios_can_branch(TREE, j+1)) Py_RETURN_TRUE; else Py_RETURN_FALSE;
 }
 
 static PyObject *Tree_branchupon(TreeObject *self, PyObject *args) {
@@ -417,13 +417,13 @@ static PyObject *Tree_branchupon(TreeObject *self, PyObject *args) {
 		 j, numcols);
     return NULL;
   }
-  if (!glp_ios_can_branch(TREE, j)) {
+  if (!glp_ios_can_branch(TREE, j+1)) {
     PyErr_SetString(PyExc_RuntimeError, "cannot branch upon this column");
     return NULL;
   }
   switch (select) {
   case 'D': case 'U': case 'N':
-    glp_ios_branch_upon(TREE, j, select);
+    glp_ios_branch_upon(TREE, j+1, select);
     Py_RETURN_NONE;
   default:
     PyErr_SetString(PyExc_ValueError, "select argument must be D, U, or N");
@@ -431,6 +431,87 @@ static PyObject *Tree_branchupon(TreeObject *self, PyObject *args) {
   }
 }
 #endif // GLPK_VERSION(4, 21)
+
+#if GLPK_VERSION(4, 32)
+static PyObject *Tree_rowattr(TreeObject *self, PyObject *args) {
+  CHECKTREE;
+  int i;
+  if (!PyArg_ParseTuple(args, "i", &i)) {
+    return NULL;
+  }
+  int numrows = glp_get_num_rows(LP);
+  if (i<0 || i>=numrows) {
+    PyErr_Format(PyExc_IndexError, "index %d out of bound for %d rows",
+		 i, numrows);
+    return NULL;
+  }
+  RowAttrObject* obj = RowAttr_New();
+  glp_ios_row_attr(TREE, i+1, &(obj->attr));
+  return (PyObject*)obj;
+}
+
+static PyObject *Tree_clearpool(TreeObject *self) {
+  CHECKTREE;
+  if (glp_ios_reason(TREE) != GLP_ICUTGEN) {
+    PyErr_SetString(PyExc_RuntimeError,
+		    "Can only clear the pool when tree.reason=='cutgen'");
+    return NULL;
+  }
+  glp_ios_clear_pool(self->tree);
+  Py_RETURN_NONE;
+}
+
+static PyObject* Tree_addrow(TreeObject *self, PyObject *args,
+			     PyObject *keywds) {
+  CHECKTREE;
+  if (glp_ios_reason(TREE) != GLP_ICUTGEN) {
+    PyErr_SetString(PyExc_RuntimeError,
+		    "Can only add rows when tree.reason=='cutgen'");
+    return NULL;
+  }
+  int *ind;
+  double *val;
+  double rhs;
+  static char* kwlist[] = {
+    "rowspec", "rhs", "islowerbound", "klass", "name", NULL};
+  PyObject *rowspec = NULL;
+  unsigned char islowerbound=0;
+  char *name = NULL;
+  int klass = 0, len = 0;
+
+  if (!PyArg_ParseTupleAndKeywords
+      (args, keywds, "Odb|is", kwlist, &rowspec, &rhs, &islowerbound, &klass, &name))
+    return NULL;
+  if (!util_extract_if(rowspec, self->py_lp->rows, &len, &ind, &val))
+    return NULL;
+  int retval = glp_ios_add_row(TREE, name, klass, 0, len, ind-1, val-1,
+			       islowerbound ? GLP_LO : GLP_UP, rhs);
+  return PyInt_FromLong(retval-1);
+}
+
+static PyObject *Tree_delrow(TreeObject *self, PyObject *args) {
+  CHECKTREE;
+  int i;
+  if (!PyArg_ParseTuple(args, "i", &i)) {
+    return NULL;
+  }
+  if (glp_ios_reason(TREE) != GLP_ICUTGEN) {
+    PyErr_SetString(PyExc_RuntimeError,
+		    "Can only delete rows when tree.reason=='cutgen'");
+    return NULL;
+  }
+  int numrows = glp_get_num_rows(LP);
+  if (i<0 || i>=numrows) {
+    PyErr_Format(PyExc_IndexError, "index %d out of bound for %d rows",
+		 i, numrows);
+    return NULL;
+  }
+  glp_ios_del_row(TREE, i+1);
+  
+ Py_RETURN_NONE;
+}
+
+#endif // GLPK_VERSION(4, 32)
 
 static PyObject *Tree_heuristic(TreeObject *self, PyObject *arg) {
   CHECKTREE;
@@ -470,6 +551,19 @@ static PyObject *Tree_heuristic(TreeObject *self, PyObject *arg) {
   free(x);
   if (notaccepted) Py_RETURN_FALSE; else Py_RETURN_TRUE;
 }
+
+#if 0 && GLPK_VERSION(4, 37)
+static PyObject *Tree_feasibility_pump(TreeObject *self) {
+  CHECKTREE;
+  if (glp_ios_reason(TREE) != GLP_IHEUR) {
+    PyErr_SetString(PyExc_RuntimeError,
+		    "function may only be called during heur phase");
+    return NULL;
+  }
+  glp_ios_feas_pump(TREE);
+  Py_RETURN_NONE;
+}
+#endif
 
 /****************** GET-SET-ERS ***************/
 
@@ -534,6 +628,15 @@ static PyObject* Tree_getgap(TreeObject *self, void *closure) {
   return PyFloat_FromDouble(glp_ios_mip_gap(TREE));
 }
 
+#if GLPK_VERSION(4, 32)
+static PyObject* Tree_getpoolsize(TreeObject *self, void *closure) {
+  CHECKTREE;
+  if (glp_ios_reason(TREE) == GLP_ICUTGEN)
+    return PyInt_FromLong(glp_ios_pool_size(TREE));
+  Py_RETURN_NONE;
+}
+#endif
+
 /****************** OBJECT DEFINITION *********/
 
 int Tree_InitType(PyObject *module) {
@@ -578,6 +681,12 @@ static PyGetSetDef Tree_getset[] = {
    "      |best_mip - best_bnd|\n"
    "gap = ---------------------\n"
    "      |best_mip|+epsilon", NULL},
+#if GLPK_VERSION(4, 32)
+  {"pool_size", (getter)Tree_getpoolsize, (setter)NULL,
+   "The number of cutting plane constraints in the cut pool.  This\n"
+   "attribute is None except when tree.reason=='cutgen'.",
+   NULL},
+#endif
   {NULL}
 };
 
@@ -619,6 +728,36 @@ static PyMethodDef Tree_methods[] = {
    "returns True or False depending on whether the solution was\n"
    "accepted or not.  Note that this function should be called\n"
    "only when the reason member of the tree is 'heur'."},
+#if 0 && GLPK_VERSION(4, 37)
+  {"feasibility_pump", (PyCFunction)Tree_feasibility_pump, METH_NOARGS,
+   "feasibility_pump()\n\n"
+   "Apply the feasubility pump heuristic.  Note that this\n"
+   "function should be called only when the reason member of\n"
+   "the tree is 'heur'."},
+#endif
+#if GLPK_VERSION(4, 32)
+  {"row_attr", (PyCFunction)Tree_rowattr, METH_VARARGS,
+   "row_attr(row_index)\n\n"
+   "Provides an object containing additional attributes of the\n"
+   "indicated row, a RowAttr object."},
+  {"clear_pool", (PyCFunction)Tree_clearpool, METH_NOARGS,
+   "clear_pool()\n\n"
+   "Delete all existing cutting plane constraints from the cut pool."},
+  {"add_row", (PyCFunction)Tree_addrow, METH_VARARGS | METH_KEYWORDS,
+   "add_row(rowspec, rhs, islowerbound,[klass=0],[name=None])\n\n"
+   "Adds a new cutting plane constraint.  The argument rowspec is\n"
+   "a matrix row  specification (the same as fed to any Bar.matrix\n"
+   "object, that is, consisting of dense values, or else\n"
+   "index/value tuples), 'rhs' is the right hand side of the\n"
+   "constraint, and 'islowerbound' should be True/False if that\n"
+   "rhs is a lower/upper bound, respectively.  Optional keyword\n"
+   "argument are 'klass' (should be either 0, or a number from 101\n"
+   "to 200), and 'name' to give the row a semantically meaningful\n"
+   "label.  This returns the index of the added row."},
+  {"del_row", (PyCFunction)Tree_delrow, METH_VARARGS,
+   "del_row(row_index)\n\n"
+   "Removes the indicated row from the cut pool."},
+#endif
   {NULL}
 };
 
@@ -663,3 +802,110 @@ PyTypeObject TreeType = {
 };
 
 #endif // GLPK_VERSION(4, 20)
+
+#if GLPK_VERSION(4, 32)
+
+static void RowAttr_dealloc(RowAttrObject *self) {
+  if (self->weakreflist != NULL) {
+    PyObject_ClearWeakRefs((PyObject*)self);
+  }
+  self->ob_type->tp_free((PyObject*)self);
+}
+
+/** Create a new parameter collection object. */
+RowAttrObject *RowAttr_New(void) {
+  RowAttrObject *k = (RowAttrObject*)PyObject_New(RowAttrObject, &RowAttrType);
+  if (k==NULL) return k;
+  bzero((void*)(&(k->attr)), sizeof(glp_attr));
+  k->weakreflist = NULL;
+  return k;
+}
+
+/****************** GET-SET-ERS ***************/
+
+static PyObject* RowAttr_origin(RowAttrObject *self, void *closure) {
+  switch (self->attr.origin) {
+  case GLP_RF_REG:  return PyString_FromString("reg");
+  case GLP_RF_LAZY: return PyString_FromString("lazy");
+  case GLP_RF_CUT:  return PyString_FromString("cut");
+  default: Py_RETURN_NONE;
+  }
+}
+
+static PyObject* RowAttr_klass(RowAttrObject *self, void *closure) {
+  switch (self->attr.klass) {
+  case GLP_RF_GMI: return PyString_FromString("gmi");
+  case GLP_RF_MIR: return PyString_FromString("mir");
+  case GLP_RF_COV: return PyString_FromString("cov");
+  case GLP_RF_CLQ: return PyString_FromString("clq");
+  default: Py_RETURN_NONE;
+  }
+}
+/****************** OBJECT DEFINITION *********/
+
+int RowAttr_InitType(PyObject *module) {
+  return util_add_type(module, &RowAttrType);
+}
+
+static PyMemberDef RowAttr_members[] = {
+  {"level", T_INT, offsetof(RowAttrObject, attr.level),  RO,
+   "Subproblem level at which the row was created.\n"
+   "Level zero indicates it was a row present when the MIP solver\n"
+   "was invoked."},
+  {NULL}
+};
+
+static PyGetSetDef RowAttr_getset[] = {
+  {"origin", (getter)RowAttr_origin, (setter)NULL,
+   "The row origin flag one of 'reg', 'lazy', 'cut', for regular,\n"
+   "lazy, or cutting plane constraint."},
+  {"klass", (getter)RowAttr_klass, (setter)NULL,
+   "The row class descriptor.  It can be one of 'gmi', 'mir', 'cov',\n"
+   "'clq' for Gomery's mixed integer, mixed integer rounding, mixed\n"
+   "cover, or clique cut (respectively)."},
+  {NULL}
+};
+
+static PyMethodDef RowAttr_methods[] = {
+  {NULL}
+};
+
+PyTypeObject RowAttrType = {
+  PyObject_HEAD_INIT(NULL)
+  0,					/* ob_size */
+  "glpk.RowAttr",			/* tp_name */
+  sizeof(RowAttrObject),		/* tp_basicsize*/
+  0,					/* tp_itemsize*/
+  (destructor)RowAttr_dealloc,		/* tp_dealloc*/
+  0,					/* tp_print*/
+  0,					/* tp_getattr*/
+  0,					/* tp_setattr*/
+  0,					/* tp_compare*/
+  0,					/* tp_repr*/
+  0,					/* tp_as_number*/
+  0,					/* tp_as_sequence*/
+  0,					/* tp_as_mapping*/
+  0,					/* tp_hash */
+  0,					/* tp_call*/
+  0,					/* tp_str*/
+  0,					/* tp_getattro*/
+  0,					/* tp_setattro*/
+  0,					/* tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags*/
+  "Row attributes available to callback functions.\n"
+  "The mixed-integer solver's user callback functionality allows\n"
+  "the user to find attributes of a particular row in the current\n"
+  "subproblem.",
+	/* tp_doc */
+  0,					/* tp_traverse */
+  0,					/* tp_clear */
+  0,					/* tp_richcompare */
+  offsetof(RowAttrObject, weakreflist),	/* tp_weaklistoffset */
+  0,					/* tp_iter */
+  0,					/* tp_iternext */
+  RowAttr_methods,			/* tp_methods */
+  RowAttr_members,			/* tp_members */
+  RowAttr_getset,			/* tp_getset */
+};
+
+#endif // GLPK_VERSION(4, 32)

@@ -344,6 +344,23 @@ static PyObject* LPX_basis_read(LPXObject *self, PyObject *args) {
 
 /**************** SOLVER METHODS **************/
 
+#if GLPK_VERSION(4, 33)
+static PyObject* interiorsolver_retval_to_message(int retval) {
+  switch (retval) {
+  case 0:               Py_RETURN_NONE;
+  case GLP_EFAIL:       return PyString_FromString("fail");
+  case GLP_EITLIM:      return PyString_FromString("itlim");
+  case GLP_ENOCVG:      return PyString_FromString("nocvg");
+  case GLP_EINSTAB:     return PyString_FromString("instab");
+#if GLPK_VERSION(4, 38)
+#else
+  case GLP_ENOFEAS:      return PyString_FromString("nofeas");
+#endif // GLPK_VERSION(4, 38)
+  default:	        return PyString_FromString("unknown?");
+  }
+}
+#endif // GLPK_VERSION(4, 33)
+
 static PyObject* solver_retval_to_message(int retval) {
   switch (retval) {
   case LPX_E_OK:	Py_RETURN_NONE;
@@ -380,6 +397,9 @@ static PyObject* glpsolver_retval_to_message(int retval) {
   case GLP_ETMLIM: returnval="tmlim"; break;
   case GLP_ENOPFS: returnval="nopfs"; break;
   case GLP_ENODFS: returnval="nodfs"; break;
+#if GLPK_VERSION(4, 32)
+  case GLP_EMIPGAP: returnval="mipgap"; break;
+#endif
 #if GLPK_VERSION(4, 20)
   case GLP_EROOT: returnval="root"; break;
   case GLP_ESTOP: returnval="stop"; break;
@@ -482,22 +502,101 @@ static PyObject* LPX_solver_simplex(LPXObject *self, PyObject *args,
     self->last_solver = 0;
   return glpsolver_retval_to_message(retval);
 #else
+  // Should we fail if they use parameters, or just ignore them?
   int retval = lpx_simplex(LP);
   if (retval!=LPX_E_FAULT) self->last_solver = 0;
   return solver_retval_to_message(retval);
 #endif
 }
 
-static PyObject* LPX_solver_exact(LPXObject *self) {
+static PyObject* LPX_solver_exact(LPXObject *self, PyObject *args,
+				  PyObject *keywds) {
+#if GLPK_VERSION(4, 33)
+  glp_smcp cp;
+  // Set all to GLPK defaults, except for the message level, which
+  // inexplicably has a default "verbose" setting.
+  glp_init_smcp(&cp);
+  cp.msg_lev = GLP_MSG_OFF;
+  // Map the keyword arguments to the appropriate entries.
+  static char *kwlist[] = {"msg_lev", "it_lim", "tm_lim", NULL};
+  if (!PyArg_ParseTupleAndKeywords
+      (args, keywds, "|iii", kwlist, &cp.msg_lev, &cp.it_lim, &cp.tm_lim)) {
+    return NULL;
+  }
+  // Do checking on the various entries.
+  switch (cp.msg_lev) {
+  case GLP_MSG_OFF: case GLP_MSG_ERR: case GLP_MSG_ON: case GLP_MSG_ALL: break;
+  default:
+    PyErr_SetString
+      (PyExc_ValueError,
+       "invalid value for msg_lev (LPX.MSG_* are valid values)");
+    return NULL;
+  }
+  if (cp.it_lim<0) {
+    PyErr_SetString(PyExc_ValueError, "it_lim must be non-negative");
+    return NULL;
+  }
+  if (cp.tm_lim<0) {
+    PyErr_SetString(PyExc_ValueError, "tm_lim must be non-negative");
+    return NULL;
+  }
+  // Checks complete... run the exact solver.
+  int retval = glp_exact(LP, &cp);
+  if (retval!=GLP_EBADB && retval!=GLP_ESING
+      && retval!=GLP_EBOUND && retval!=GLP_EFAIL)
+    self->last_solver = 0;
+  return glpsolver_retval_to_message(retval);
+#else
+  // Again, do we fail when KW args are specified for this version?
   int retval = lpx_exact(LP);
   if (retval!=LPX_E_FAULT) self->last_solver = 0;
   return solver_retval_to_message(retval);
+#endif
 }
 
-static PyObject* LPX_solver_interior(LPXObject *self) {
+static PyObject* LPX_solver_interior(LPXObject *self, PyObject *args,
+				     PyObject *keywds) {
+#if GLPK_VERSION(4, 33)
+#if GLPK_VERSION(4, 38)
+  glp_iptcp cp;
+  // Set all to GLPK defaults, except for the message level, which
+  // inexplicably has a default "verbose" setting.
+  glp_init_iptcp(&cp);
+  // Map the keyword arguments to the appropriate entries.
+  static char *kwlist[] = {"msg_lev", "ord_alg", NULL};
+  if (!PyArg_ParseTupleAndKeywords
+      (args, keywds, "|ii", kwlist, &cp.msg_lev, &cp.ord_alg)) {
+    return NULL;
+  }
+  // Do checking on the various entries.
+  switch (cp.msg_lev) {
+  case GLP_MSG_OFF: case GLP_MSG_ERR: case GLP_MSG_ON: case GLP_MSG_ALL: break;
+  default:
+    PyErr_SetString
+      (PyExc_ValueError,
+       "invalid value for msg_lev (LPX.MSG_* are valid values)");
+    return NULL;
+  }
+  switch (cp.ord_alg) {
+  case GLP_ORD_NONE: case GLP_ORD_QMD: case GLP_ORD_AMD: case GLP_ORD_SYMAMD:
+    break;
+  default:
+    PyErr_SetString
+      (PyExc_ValueError, 
+       "invalid value for ordering algorithm prior to Cholesky (LPX.ORD_*)");
+    return NULL;
+  }
+  int retval = glp_interior(LP, &cp);
+#else
+  int retval = glp_interior(LP, NULL);
+#endif
+  if (retval==0) self->last_solver = 1;
+  return interiorsolver_retval_to_message(retval);
+#else
   int retval = lpx_interior(LP);
   if (retval!=LPX_E_FAULT) self->last_solver = 1;
   return solver_retval_to_message(retval);
+#endif
 }
 
 #if GLPK_VERSION(4, 20)
@@ -571,6 +670,7 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
     return NULL;
   }
 #if GLPK_VERSION(4, 20)
+  // Much of this initial code concerns.
   PyObject *callback=NULL;
   struct mip_callback_object*info=NULL;
   glp_iocp cp;
@@ -582,12 +682,18 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
 #if GLPK_VERSION(4, 21)
      "pp_tech",
 #endif // GLPK_VERSION(4, 21)
+#if GLPK_VERSION(4, 37)
+     "fp_heur",
+#endif // GLPK_VERSION(4, 37)
 #if GLPK_VERSION(4, 24)
      "gmi_cuts",
 #endif // GLPK_VERSION(4, 24)
 #if GLPK_VERSION(4, 23)
      "mir_cuts",
 #endif // GLPK_VERSION(4, 23)
+#if GLPK_VERSION(4, 32)
+     "cov_cuts", "clq_cuts", "presolve", "binarize", "mip_gap",
+#endif // GLPK_VERSION(4, 32)
      "tol_int", "tol_obj", "tm_lim", "out_frq", "out_dly", 
      "callback", //"cb_info", "cb_size",
      NULL};
@@ -595,25 +701,38 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
       (args, keywds, "|iii"
 #if GLPK_VERSION(4, 21)
        "i"
-#endif // GLPK_VERSION(4, 21)
+#endif // GLPK_VERSION(4, 21) pp_tech
+#if GLPK_VERSION(4, 37)
+       "i"
+#endif // GLPK_VERSION(4, 37) fp_heur
 #if GLPK_VERSION(4, 24)
        "i"
-#endif // GLPK_VERSION(4, 24)
+#endif // GLPK_VERSION(4, 24) gmi_cuts
 #if GLPK_VERSION(4, 23)
        "i"
-#endif // GLPK_VERSION(4, 23)
+#endif // GLPK_VERSION(4, 23) mir_cuts
+#if GLPK_VERSION(4, 32)
+       "iiiid"
+#endif // GLPK_VERSION(4, 32) cov_cuts, clq_cuts, presolve, binarize, mip_gap
        "ddiiiO", kwlist, &cp.msg_lev, &cp.br_tech, &cp.bt_tech,
 #if GLPK_VERSION(4, 21)
        &cp.pp_tech,
 #endif // GLPK_VERSION(4, 21)
+#if GLPK_VERSION(4, 37)
+       &cp.fp_heur,
+#endif // GLPK_VERSION(4, 37)
 #if GLPK_VERSION(4, 24)
        &cp.gmi_cuts,
 #endif // GLPK_VERSION(4, 24)
 #if GLPK_VERSION(4, 23)
        &cp.mir_cuts,
 #endif // GLPK_VERSION(4, 23)
+#if GLPK_VERSION(4, 32)
+       &cp.cov_cuts, &cp.clq_cuts, &cp.presolve, &cp.binarize, &cp.mip_gap,
+#endif // GLPK_VERSION(4, 32)
        &cp.tol_int, &cp.tol_obj, &cp.tm_lim, &cp.out_frq, &cp.out_dly,
-       &callback)) {
+       &callback
+       )) {
     return NULL;
   }
 #if GLPK_VERSION(4, 24)
@@ -622,6 +741,15 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
 #if GLPK_VERSION(4, 23)
   cp.mir_cuts = cp.mir_cuts ? GLP_ON : GLP_OFF;
 #endif // GLPK_VERSION(4, 23)
+#if GLPK_VERSION(4, 37)
+  cp.fp_heur  = cp.fp_heur  ? GLP_ON : GLP_OFF;
+#endif
+#if GLPK_VERSION(4, 32)
+  cp.cov_cuts = cp.cov_cuts ? GLP_ON : GLP_OFF;
+  cp.clq_cuts = cp.clq_cuts ? GLP_ON : GLP_OFF;
+  cp.presolve = cp.presolve ? GLP_ON : GLP_OFF;
+  cp.binarize = cp.binarize ? GLP_ON : GLP_OFF;
+#endif
   // Do checking on the various entries.
   switch (cp.msg_lev) {
   case GLP_MSG_OFF: case GLP_MSG_ERR: case GLP_MSG_ON: case GLP_MSG_ALL: break;
@@ -632,6 +760,9 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
     return NULL;
   }
   switch (cp.br_tech) {
+#if GLPK_VERSION(4, 40)
+  case GLP_BR_PCH:
+#endif
   case GLP_BR_FFV: case GLP_BR_LFV: case GLP_BR_MFV: case GLP_BR_DTH: break;
   default:
     PyErr_SetString
@@ -677,6 +808,13 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
     PyErr_SetString(PyExc_ValueError, "out_dly must be non-negative");
     return NULL;
   }
+#if GLPK_VERSION(4, 32)
+  if (cp.mip_gap<0) {
+    PyErr_SetString(PyExc_ValueError, "mip_gap must be non-negative");
+    return NULL;
+  }
+#endif // GLPK_VERSION(4, 32)
+
   int retval;
   if (callback != NULL && callback != Py_None) {
     info = (struct mip_callback_object*)
@@ -693,9 +831,18 @@ static PyObject* LPX_solver_integer(LPXObject *self, PyObject *args,
     // callback function, or if the callback was not appropriate.
     return NULL;
   }
-  if (retval!=GLP_EBADB && retval!=GLP_ESING && retval!=GLP_ECOND
-      && retval!=GLP_EBOUND && retval!=GLP_EFAIL)
+  
+  // If there is not a failure condition.
+  switch (retval) {
+  case GLP_EBADB: case GLP_ESING: case GLP_ECOND:
+  case GLP_EBOUND: case GLP_EFAIL:
+#if GLPK_VERSION(4, 32)
+  case GLP_ENOPFS: case GLP_ENODFS: case GLP_EMIPGAP:
+#endif // GLPK_VERSION(4, 32)
+    break;
+  default:
     self->last_solver = 2;
+  }
   return glpsolver_retval_to_message(retval);
 #else
   int retval = lpx_integer(LP);
@@ -738,15 +885,26 @@ static KKTObject* LPX_kktint(LPXObject *self) {
   return kkt;
 }
 
+#if GLPK_VERSION(4, 37)
+int LPX_glp_write_lp_noparam(LPX* lp, const char *fname)
+{
+  glp_write_lp(lp, NULL, fname);
+}
+#endif
+
 static PyObject* LPX_write(LPXObject *self, PyObject *args, PyObject *keywds) {
   static char* kwlist[] = {"mps", "bas", "freemps", "cpxlp", "prob",
-			   "sol", "sens_bnds", "ips", "mip", NULL};
+			   "sol", "ips", "mip", "sens_bnds", NULL};
   static int(*writers[])(LPX*,const char*) = {
     lpx_write_mps, lpx_write_bas, 
     lpx_write_freemps, 
     lpx_write_cpxlp,
-    lpx_print_prob, lpx_print_sol, lpx_print_sens_bnds, lpx_print_ips,
-    lpx_print_mip};
+#if GLPK_VERSION(4, 37)
+    LPX_glp_write_lp_noparam,   glp_print_sol, glp_print_ipt, glp_print_mip,
+#else
+    lpx_print_prob, lpx_print_sol, lpx_print_ips, lpx_print_mip,
+#endif
+    lpx_print_sens_bnds};
   char* fnames[] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL};
   int i;
   if (!PyArg_ParseTupleAndKeywords
@@ -770,6 +928,13 @@ static PyObject* LPX_write(LPXObject *self, PyObject *args, PyObject *keywds) {
   }
   Py_RETURN_NONE;
 }
+
+#if GLPK_VERSION(4, 42)
+static PyObject* LPX_sort_matrix(LPXObject *self) {
+  glp_sort_matrix(LP);
+  Py_RETURN_NONE;
+}
+#endif
 
 /****************** GET-SET-ERS ***************/
 
@@ -841,7 +1006,12 @@ static PyObject* LPX_getspecstatus(LPXObject *self, int(*statfunc)(LPX*)) {
 }
 
 static PyObject* LPX_getray(LPXObject *self, void *closure) {
-  int ray = lpx_get_ray_info(LP), numrows;
+  int ray, numrows;
+#if GLPK_VERSION(4, 33)
+  ray = glp_get_unbnd_ray(LP);
+#else
+  ray = lpx_get_ray_info(LP);
+#endif
   if (ray==0) Py_RETURN_NONE;
   numrows = glp_get_num_rows(LP);
   ray--;
@@ -902,11 +1072,20 @@ int LPX_InitType(PyObject *module) {
   SETCONST(BR_LFV);
   SETCONST(BR_MFV);
   SETCONST(BR_DTH);
+#if GLPK_VERSION(4, 40)
+  SETCONST(BR_PCH);
+#endif
 
   SETCONST(BT_DFS);
   SETCONST(BT_BFS);
   SETCONST(BT_BLB);
   SETCONST(BT_BPH);
+#endif
+#if GLPK_VERSION(4, 38)
+  SETCONST(ORD_NONE);
+  SETCONST(ORD_QMD);
+  SETCONST(ORD_AMD);
+  SETCONST(ORD_SYMAMD);
 #endif
 #if GLPK_VERSION(4, 21)
   SETCONST(PP_NONE);
@@ -923,6 +1102,9 @@ int LPX_InitType(PyObject *module) {
   if ((retval=KKT_InitType(module))!=0) return retval;
 #if GLPK_VERSION(4, 20)
   if ((retval=Tree_InitType(module))!=0) return retval;
+#endif
+#if GLPK_VERSION(4, 32)
+  if ((retval=RowAttr_InitType(module))!=0) return retval;
 #endif
   return 0;
 }
@@ -1092,9 +1274,29 @@ static PyMethodDef LPX_methods[] = {
    "nopfs   -- No primal feasible solution. (Presolver only.)\n"
    "nodfs   -- No dual feasible solution. (Presolver only.)\n" },
 
-  {"exact", (PyCFunction)LPX_solver_exact, METH_NOARGS,
+  {"exact", (PyCFunction)LPX_solver_exact, METH_VARARGS|METH_KEYWORDS,
+#if GLPK_VERSION(4, 33)
+   "exact([keyword arguments])\n\n"
+#else
    "exact()\n\n"
+#endif
    "Attempt to solve the problem using an exact simplex method.\n\n"
+#if GLPK_VERSION(4, 38)
+   "This procedure uses some keyword arguments.\n"
+   "msg_lev : Controls the message level of terminal output.\n"
+   "  LPX.MSG_OFF -- no output (default)\n"
+   "  LPX.MSG_ERR -- error and warning messages\n"
+   "  LPX.MSG_ON  -- normal output\n"
+   "  LPX.MSG_ALL -- full informational output\n"
+   "ord_alg : Ordering algorithm used prior to Cholesky factorization.\n"
+   "  LPX.ORD_NONE-- use natural original ordering\n"
+   "  LPX.ORD_QMD -- quotient minimum degree (QMD)\n"
+   "  LPX.ORD_AMD -- approximate minimum degree (AMD)\n"
+   "  LPX.ORD_SYMAND -- approximate minimum degree (SYMAMD)\n\n"
+#else
+   "Your version of GLPK is too low, but GLPK 4.38 and higher define\n"
+   "some keyword arguments for this function.\n\n"
+#endif
    "This returns None if the problem was successfully solved.\n"
    "Alternately, on failure it will return one of the following\n"
    "strings to indicate failure type.\n\n"
@@ -1104,14 +1306,32 @@ static PyMethodDef LPX_methods[] = {
    "itlim   -- Iteration limited exceeded.\n"
    "tmlim   -- Time limit exceeded." },
 
-  {"interior", (PyCFunction)LPX_solver_interior, METH_NOARGS,
+  {"interior", (PyCFunction)LPX_solver_interior, METH_VARARGS|METH_KEYWORDS,
+#if GLPK_VERSION(4, 33)
+   "interior([keyword arguments])\n\n"
+#else
    "interior()\n\n"
+#endif
    "Attempt to solve the problem using an interior-point method.\n\n"
+#if GLPK_VERSION(4, 38)
+   "This returns None if the problem was successfully solved, though\n"
+   "it does not necessarily follow that the solution found was\n"
+   "optimal.  Check the 'status' attribute to disambiguate.\n"
+#else
    "This returns None if the problem was successfully solved.\n"
+#endif // GLPK_VERSION(4, 38)
    "Alternately, on failure it will return one of the following\n"
    "strings to indicate failure type.\n\n"
-   "fault   -- There are no rows or columns.\n"
+#if GLPK_VERSION(4, 33)
+   "fail    "
+#else
+   "fault   "
+#endif // GLPK_VERSION(4, 33)
+   "-- There are no rows or columns.\n"
+#if GLPK_VERSION(4, 38)
+#else
    "nofeas  -- The problem has no feasible (primal/dual) solution.\n"
+#endif // GLPK_VERSION(4, 38)
    "noconv  -- Very slow convergence or divergence.\n"
    "itlim   -- Iteration limited exceeded.\n"
    "instab  -- Numerical instability when solving Newtonian system." },
@@ -1144,11 +1364,18 @@ static PyMethodDef LPX_methods[] = {
    "  LPX.PP_ROOT -- perform preprocessing only on the root level\n"
    "  LPX.PP_ALL  -- perform preprocessing on all levels (default)\n"
 #endif
+#if GLPK_VERSION(4, 37)
+   "fp_heur: Apply the feasibility pump heuristic (default False)\n"
+#endif
 #if GLPK_VERSION(4, 24)
    "gmi_cuts: Use Gomory's mixed integer cuts (default False)\n"
 #endif
 #if GLPK_VERSION(4, 23)
    "mir_cuts: Use mixed integer rounding cuts (default False)\n"
+#endif
+#if GLPK_VERSION(4, 32)
+   "cov_cuts: Enable generating mixed cover cuts (default False)\n"
+   "clq_cuts: Enable generating clique cuts (default False)\n"
 #endif
    "tol_int : Tolerance used to check if the optimal solution to the\n"
    "  current LP relaxation is integer feasible.\n"
@@ -1160,15 +1387,19 @@ static PyMethodDef LPX_methods[] = {
    "out_dly : Terminal output delay in milliseconds. (default 10000)\n"
    "callback: A callback object the user may use to monitor and control\n"
    "  the solver.  During certain portions of the optimization, the\n"
-   "  solver will call methods of callback object. (default None)\n\n"
-
+   "  solver will call methods of callback object. (default None)\n"
+#if GLPK_VERSION(4, 32)
+   "presolve: Use the MIP presolver (default False)\n"
+   "binarize: Replace interger variables with binary ones (default False)\n"
+#endif
+   "\n"
    "The last parameter, callback, is worth its own discussion.  During\n"
    "the branch-and-cut algorithm of the MIP solver, at various points\n"
    "callback hooks are invoked which allow the user code to influence\n"
    "the proceeding of the MIP solver.  The user code may influence the\n"
    "solver in the hook by modifying and operating on a Tree instance\n"
-   "passed to the hook.  These hooks have various codes, which we list\n"
-   "here.\n"
+   "passed as the sole argument to the hook.  These hooks have various\n"
+   "names depending on their function, which we list here.\n"
    "    select - request for subproblem selection\n"
    "    prepro - request for preprocessing\n"
    "    rowgen - request for row generation\n"
@@ -1249,6 +1480,13 @@ static PyMethodDef LPX_methods[] = {
    "sens_bnds -- Bounds sensitivity information.\n"
    "ips       -- Interior-point solution in printable format.\n"
    "mip       -- MIP solution in printable format."},
+
+#if GLPK_VERSION(4, 42)
+  {"sort", (PyCFunction)LPX_sort_matrix, METH_NOARGS,
+   "sort()\n\n"
+   "Performs a reconsolidation and reordering of the internal\n"
+   "linked lists."},
+#endif
   
   {NULL}
 };

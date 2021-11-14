@@ -350,3 +350,23 @@ class MatrixScalingTestCase(Runner, unittest.TestCase):
         self.assertEqual(set([1.0]), set(r.scale for r in self.lp.rows) |
                          set(c.scale for c in self.lp.cols))
 
+
+if env.version >= (4,42):
+    class MatrixSortingTestCase(Runner, unittest.TestCase):
+        """Tests the sort function."""
+        def setUp(self):
+            self.lp = LPX()
+            self.lp.rows.add(100)
+            self.lp.cols.add(100)
+            rgen = random.Random(0)
+            newmatrix = []
+            # This should be pretty poorly conditioned.
+            for row in self.lp.rows:
+                scale = rgen.uniform(0,1000)
+                newmatrix.extend(rgen.uniform(-scale, scale)
+                                 for c in self.lp.cols)
+            self.lp.matrix = newmatrix
+
+        def testSorting(self):
+            """Tests sorting."""
+            self.lp.sort()

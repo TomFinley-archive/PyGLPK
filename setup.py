@@ -28,10 +28,7 @@ if m:
     sys.argv = sys.argv[:-1]
     libdirs.append(os.path.join('locals', '4.%d'%minor_version, 'lib'))
     incdirs.append(os.path.join('locals', '4.%d'%minor_version, 'include'))
-    if minor_version<37:
-        libs = ['glpk.0.%d.0'%(minor_version-15)]
-    else:
-        libs = ['glpk.0']
+    libs = ['glpk.42']
     print (libdirs, incdirs)
 else:
     # Try to get which is the executable path, and infer additional
@@ -80,7 +77,7 @@ of the GNU Linear Programming Kit.
 """
 
 setup(name = 'glpk',
-      version = '0.3',
+      version = '0.4',
       description = 'PyGLPK, a Python module encapsulating GLPK.',
       long_description = ld,
       author = 'Thomas Finley',
